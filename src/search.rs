@@ -77,11 +77,11 @@ pub async fn bootstrap_local_db(project_root: &Path) -> Result<SqlitePool> {
 // ─── Upsert ───────────────────────────────────────────────────────────────────
 
 pub async fn upsert_file(
-    pool:         &SqlitePool,
-    project_root: &Path,
-    path:         &Path,
-    sha256:       &str,
-    symbols:      &[Symbol],
+    pool:          &SqlitePool,
+    _project_root: &Path,
+    path:          &Path,
+    sha256:        &str,
+    symbols:       &[Symbol],
 ) -> Result<()> {
     let now      = Utc::now().to_rfc3339();
     let path_str = path.to_string_lossy().to_string();

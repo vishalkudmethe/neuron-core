@@ -6,6 +6,7 @@ use tokio::fs;
 use tracing::debug;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Symbol {
     pub name:       String,
     pub kind:       SymbolKind,
@@ -16,6 +17,7 @@ pub struct Symbol {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum SymbolKind {
     Function, Method, Struct, Enum, Trait,
     Class, Module, Import, Constant, Other,

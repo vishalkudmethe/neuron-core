@@ -75,6 +75,7 @@ impl LoopGuard {
     }
 
     /// Summary of guard state.
+    #[allow(dead_code)]
     pub fn stats(&self) -> LoopGuardStats {
         LoopGuardStats {
             window_size:    self.window.len(),
@@ -114,6 +115,7 @@ impl LoopGuard {
 // ─── Stats ────────────────────────────────────────────────────────────────────
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct LoopGuardStats {
     pub window_size:    usize,
     pub total_detected: u32,

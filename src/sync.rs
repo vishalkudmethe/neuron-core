@@ -34,6 +34,7 @@ pub async fn export_archive(project_root: &Path, output: Option<&str>) -> Result
 }
 
 /// Stub: Future team sync (push/pull memory to shared store).
+#[allow(dead_code)]
 pub async fn sync_to_remote(_project_root: &Path, _remote_url: &str) -> Result<()> {
     println!(
         "\n{} Team sync is planned for v7. Stay tuned.\n",

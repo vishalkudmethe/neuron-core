@@ -17,9 +17,7 @@ use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use tabled::{builder::Builder, settings::Style};
-use tokio::fs;
-use tracing::{debug, info};
-use uuid::Uuid;
+use tracing::debug;
 
 use crate::manifest::NeuronManifest;
 use crate::session;
@@ -327,7 +325,7 @@ pub async fn list_projects(long: bool) -> Result<()> {
         }
     }
 
-    let table = builder.build().with(Style::modern_rounded()).to_string();
+    let table = builder.build().with(Style::rounded()).to_string();
     println!("{table}\n");
     Ok(())
 }

@@ -9,7 +9,7 @@
 use anyhow::{Context, Result};
 use chrono::Utc;
 use colored::Colorize;
-use notify::{Config as NotifyConfig, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -27,6 +27,7 @@ use crate::utils;
 // ─── Event Pipeline ───────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct FileEvent {
     pub path:       PathBuf,
     pub kind:       FileEventKind,
@@ -261,7 +262,7 @@ async fn process_file_change(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-fn should_skip(path: &Path, root: &Path) -> bool {
+fn should_skip(path: &Path, _root: &Path) -> bool {
     let path_str = path.to_string_lossy();
     // Skip Rust build artifacts, git objects, neuron backups
     path_str.contains("\\target\\")

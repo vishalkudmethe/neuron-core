@@ -44,6 +44,7 @@ pub fn global_db_path() -> Result<PathBuf> {
 }
 
 /// Return the global neuron config directory: `~/.neuron/`
+#[allow(dead_code)]
 pub fn global_neuron_dir() -> Result<PathBuf> {
     let home = dirs::home_dir()
         .ok_or_else(|| anyhow::anyhow!("Cannot determine home directory"))?;
