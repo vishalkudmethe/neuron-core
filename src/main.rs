@@ -64,6 +64,16 @@ enum Commands {
         path: Option<String>,
     },
 
+    /// Start the real-time file and git watcher daemon (alias for watch)
+    Start {
+        /// Watch directory (defaults to current dir)
+        #[arg(short, long)]
+        path: Option<String>,
+    },
+
+    /// Generate rich, ready-to-paste context for AI agents
+    Context,
+
     /// Auto-detect nearest .neuron/ folder (upward search) and restore full context
     Restore {
         /// Starting path for upward search (defaults to current dir)
@@ -150,24 +160,27 @@ async fn main() -> Result<()> {
             project_manager::init_project(&cwd, &project_name, &language).await?;
         }
 
-        Commands::Watch { path } => {
-            let watch_path = match path {
-                Some(p) => std::path::PathBuf::from(p),
-                None    => std::env::current_dir()?,
+        Commands::Watch { path } | Commands::Start { path } => {
+            let neuron_root = match path {
+                Some(p) => {
+                    let p_buf = std::path::PathBuf::from(p);
+                    utils::find_neuron_root(&p_buf).ok_or_else(|| {
+                        anyhow::anyhow!("No .neuron/ folder found upward from {}", p_buf.display())
+                    })?
+                }
+                None => project_manager::discover_project_root().await?
             };
-            // First ensure we are inside a neuron project
-            let neuron_root = utils::find_neuron_root(&watch_path).ok_or_else(|| {
-                anyhow::anyhow!(
-                    "No .neuron/ folder found. Run {} first.",
-                    "neuron init".yellow()
-                )
-            })?;
             println!(
                 "{} Watching {} ...",
                 "▶".green().bold(),
                 neuron_root.display().to_string().cyan()
             );
             watcher::start_watcher(&neuron_root).await?;
+        }
+
+        Commands::Context => {
+            let neuron_root = project_manager::discover_project_root().await?;
+            session::print_agent_context(&neuron_root).await?;
         }
 
         Commands::Restore { from } => {
@@ -187,26 +200,19 @@ async fn main() -> Result<()> {
         }
 
         Commands::Search { query, global, limit } => {
-            let cwd = std::env::current_dir()?;
-            let neuron_root = utils::find_neuron_root(&cwd).ok_or_else(|| {
-                anyhow::anyhow!("No .neuron/ folder found. Run {} first.", "neuron init".yellow())
-            })?;
+            let neuron_root = project_manager::discover_project_root().await?;
             search::search_memory(&neuron_root, &query, global, limit).await?;
         }
 
         Commands::Snapshot { note } => {
-            let cwd = std::env::current_dir()?;
-            let neuron_root = utils::find_neuron_root(&cwd).ok_or_else(|| {
-                anyhow::anyhow!("No .neuron/ folder found. Run {} first.", "neuron init".yellow())
-            })?;
+            let neuron_root = project_manager::discover_project_root().await?;
             conversation::save_snapshot(&neuron_root, note.as_deref()).await?;
         }
 
         Commands::Status => {
-            let cwd = std::env::current_dir()?;
-            match utils::find_neuron_root(&cwd) {
-                Some(root) => session::print_status(&root).await?,
-                None => {
+            match project_manager::discover_project_root().await {
+                Ok(root) => session::print_status(&root).await?,
+                Err(_) => {
                     println!(
                         "{} No Neuron project detected in current directory or parents.",
                         "⚠".yellow().bold()
@@ -221,19 +227,13 @@ async fn main() -> Result<()> {
         }
 
         Commands::Backup => {
-            let cwd = std::env::current_dir()?;
-            let neuron_root = utils::find_neuron_root(&cwd).ok_or_else(|| {
-                anyhow::anyhow!("No .neuron/ folder found.")
-            })?;
+            let neuron_root = project_manager::discover_project_root().await?;
             utils::backup_neuron_dir(&neuron_root).await?;
             println!("{} Backup complete.", "✓".green().bold());
         }
 
         Commands::Export { output } => {
-            let cwd = std::env::current_dir()?;
-            let neuron_root = utils::find_neuron_root(&cwd).ok_or_else(|| {
-                anyhow::anyhow!("No .neuron/ folder found.")
-            })?;
+            let neuron_root = project_manager::discover_project_root().await?;
             sync::export_archive(&neuron_root, output.as_deref()).await?;
         }
     }

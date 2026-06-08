@@ -116,7 +116,94 @@ pub async fn print_status(project_root: &Path) -> Result<()> {
 // ─── Print Restored Context ───────────────────────────────────────────────────
 
 /// Print the full rich context on `neuron restore` or `neuron switch`.
+/// Print the full rich context on `neuron restore` or `neuron switch`.
 pub async fn print_restored_context(project_root: &Path, manifest: &NeuronManifest) -> Result<()> {
+    let db_path = utils::local_db_path(project_root);
+
+    // Count memory units
+    let unit_count = if db_path.exists() {
+        let pool = search::open_local_db(&db_path).await?;
+        let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM memory_units")
+            .fetch_one(&pool)
+            .await
+            .unwrap_or((0,));
+        row.0
+    } else {
+        0
+    };
+
+    // Recent files touched
+    let recent_files: Vec<String> = if db_path.exists() {
+        let pool = search::open_local_db(&db_path).await?;
+        let rows: Vec<(String,)> = sqlx::query_as(
+            "SELECT DISTINCT path FROM memory_units WHERE unit_type = 'file' ORDER BY updated_at DESC LIMIT 8"
+        )
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+        rows.into_iter().map(|(p,)| p).collect()
+    } else {
+        vec![]
+    };
+
+    // Git info
+    let git_branch = git::current_branch(project_root)
+        .unwrap_or_else(|_| "unknown".to_string());
+    let last_commit = git::last_commit_message(project_root)
+        .unwrap_or_else(|_| "(no commits yet)".to_string());
+
+    // Read last conversation snapshot if any
+    let conv_dir  = project_root.join(".neuron").join("conversations");
+    let last_conv = latest_snapshot_content(&conv_dir).await;
+
+    // Regenerate the file
+    let _ = regenerate_session_context(project_root, manifest).await?;
+
+    // ── Terminal output ───────────────────────────────────────────────────────
+    let banner = "═".repeat(60);
+    println!("  {}", banner.bright_cyan());
+    println!(
+        "  {} Context Restored: {}",
+        "◈".bright_cyan().bold(),
+        manifest.name.bold().white()
+    );
+    println!("  {}", banner.bright_cyan());
+    println!("  {:22} {}", "Project:".dimmed(),      manifest.name.bold().bright_white());
+    println!("  {:22} {}", "Language:".dimmed(),     manifest.language.bright_yellow());
+    println!("  {:22} {}", "Root:".dimmed(),         project_root.display().to_string().cyan());
+    println!("  {:22} {}", "Git Branch:".dimmed(),   git_branch.bright_yellow());
+    println!("  {:22} {}", "Last Commit:".dimmed(),  utils::truncate(&last_commit, 50).white());
+    println!("  {:22} {}", "Memory Units:".dimmed(), unit_count.to_string().green().bold());
+    println!("  {:22} {}", "Indexed Files:".dimmed(),recent_files.len().to_string().green());
+
+    if !recent_files.is_empty() {
+        println!("\n  {} Recent files:", "📂".cyan());
+        for f in &recent_files {
+            println!("     {} {}", "·".dimmed(), f.dimmed());
+        }
+    }
+
+    if let Some(ref conv) = last_conv {
+        println!("\n  {} Last snapshot preview:", "💬".cyan());
+        // Print first 5 lines of the last snapshot
+        for line in conv.lines().take(5) {
+            println!("     {}", line.dimmed());
+        }
+    }
+
+    println!("\n  {}", banner.bright_cyan());
+    println!(
+        "  {} Run {} to search memory, {} to watch files.\n",
+        "ℹ".cyan(),
+        "neuron search <query>".yellow(),
+        "neuron watch".yellow()
+    );
+
+    Ok(())
+}
+
+/// Regenerate `session_context.md` file in `.neuron/`.
+pub async fn regenerate_session_context(project_root: &Path, manifest: &NeuronManifest) -> Result<String> {
     let db_path = utils::local_db_path(project_root);
 
     // Count memory units
@@ -169,45 +256,17 @@ pub async fn print_restored_context(project_root: &Path, manifest: &NeuronManife
     let ctx_path = project_root.join(".neuron").join("session_context.md");
     fs::write(&ctx_path, &context_content).await?;
 
-    // ── Terminal output ───────────────────────────────────────────────────────
-    let banner = "═".repeat(60);
-    println!("  {}", banner.bright_cyan());
-    println!(
-        "  {} Context Restored: {}",
-        "◈".bright_cyan().bold(),
-        manifest.name.bold().white()
-    );
-    println!("  {}", banner.bright_cyan());
-    println!("  {:22} {}", "Project:".dimmed(),      manifest.name.bold().bright_white());
-    println!("  {:22} {}", "Language:".dimmed(),     manifest.language.bright_yellow());
-    println!("  {:22} {}", "Root:".dimmed(),         project_root.display().to_string().cyan());
-    println!("  {:22} {}", "Git Branch:".dimmed(),   git_branch.bright_yellow());
-    println!("  {:22} {}", "Last Commit:".dimmed(),  utils::truncate(&last_commit, 50).white());
-    println!("  {:22} {}", "Memory Units:".dimmed(), unit_count.to_string().green().bold());
-    println!("  {:22} {}", "Indexed Files:".dimmed(),recent_files.len().to_string().green());
+    Ok(context_content)
+}
 
-    if !recent_files.is_empty() {
-        println!("\n  {} Recent files:", "📂".cyan());
-        for f in &recent_files {
-            println!("     {} {}", "·".dimmed(), f.dimmed());
-        }
-    }
+/// Print the rich, ready-to-paste agent context.
+pub async fn print_agent_context(project_root: &Path) -> Result<()> {
+    let manifest = NeuronManifest::load(project_root).await?;
+    let context_content = regenerate_session_context(project_root, &manifest).await?;
 
-    if let Some(ref conv) = last_conv {
-        println!("\n  {} Last snapshot preview:", "💬".cyan());
-        // Print first 5 lines of the last snapshot
-        for line in conv.lines().take(5) {
-            println!("     {}", line.dimmed());
-        }
-    }
-
-    println!("\n  {}", banner.bright_cyan());
-    println!(
-        "  {} Run {} to search memory, {} to watch files.\n",
-        "ℹ".cyan(),
-        "neuron search <query>".yellow(),
-        "neuron watch".yellow()
-    );
+    println!("\n{}", "=== COPY BELOW THIS LINE FOR YOUR AI AGENT ===".green().bold());
+    println!("{context_content}");
+    println!("{}\n", "=============================================".green().bold());
 
     Ok(())
 }

@@ -120,6 +120,41 @@ pub async fn register(manifest: &NeuronManifest) -> Result<()> {
     Ok(())
 }
 
+/// Discover the active project root path.
+/// First searches upward from CWD. If not found, queries the global database for the
+/// most recently accessed project whose root path still exists on disk.
+pub async fn discover_project_root() -> Result<PathBuf> {
+    let cwd = std::env::current_dir()?;
+    if let Some(root) = utils::find_neuron_root(&cwd) {
+        return Ok(root);
+    }
+
+    // Fall back to global index
+    let pool = open_global_db().await?;
+    let rows: Vec<(String, String)> = sqlx::query_as(
+        "SELECT name, root_path FROM projects ORDER BY last_accessed DESC"
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap_or_default();
+
+    for (name, root_path) in rows {
+        let path = PathBuf::from(&root_path);
+        if path.join(".neuron").exists() {
+            debug!("Discovered project root from global index: {} ({})", name, root_path);
+            return Ok(path);
+        }
+    }
+
+    anyhow::bail!(
+        "No Neuron project detected in current directory or parents, and no valid project found in global index.\n\n\
+        To start a new project:\n  {}\n\n\
+        Or switch to an existing project:\n  {}",
+        "neuron init".cyan(),
+        "neuron switch <name>".cyan()
+    )
+}
+
 // ─── neuron init ─────────────────────────────────────────────────────────────
 
 pub async fn init_project(root: &Path, name: &str, language: &str) -> Result<()> {
@@ -164,44 +199,41 @@ pub async fn init_project(root: &Path, name: &str, language: &str) -> Result<()>
         name.bold().bright_cyan(),
         "neuron watch".yellow().bold()
     );
+    // Helpful message suggesting adding to PATH
+    println!(
+        "  {} Hint: Add this directory or the binary location to your PATH to run 'neuron' globally.\n",
+        "💡".yellow()
+    );
     Ok(())
 }
 
 // ─── neuron restore ───────────────────────────────────────────────────────────
 
-/// Walk upward from `start` to find nearest .neuron/, then load its context.
+/// Walk upward from `start` to find nearest .neuron/ (or fall back to global discovery), then load its context.
 pub async fn restore_project(start: &Path) -> Result<()> {
-    match utils::find_neuron_root(start) {
+    let project_root = match utils::find_neuron_root(start) {
+        Some(root) => root,
         None => {
-            println!(
-                "\n{} No .neuron/ directory found searching upward from:\n  {}\n",
-                "⚠".yellow().bold(),
-                start.display().to_string().dimmed()
-            );
-            println!(
-                "  Run {} to initialize a new project, or {} to find one by name.\n",
-                "neuron init".cyan(),
-                "neuron switch <name>".cyan()
-            );
+            // Fall back to global discovery
+            discover_project_root().await?
         }
-        Some(project_root) => {
-            println!(
-                "\n{} Restoring project context from:\n  {}\n",
-                "◈".bright_cyan().bold(),
-                project_root.display().to_string().cyan()
-            );
+    };
 
-            let manifest = NeuronManifest::load(&project_root)
-                .await
-                .context("Failed to load manifest during restore")?;
+    println!(
+        "\n{} Restoring project context from:\n  {}\n",
+        "◈".bright_cyan().bold(),
+        project_root.display().to_string().cyan()
+    );
 
-            // Re-register in case paths changed (machine migration)
-            register(&manifest).await?;
+    let manifest = NeuronManifest::load(&project_root)
+        .await
+        .context("Failed to load manifest during restore")?;
 
-            // Print session context
-            session::print_restored_context(&project_root, &manifest).await?;
-        }
-    }
+    // Re-register in case paths changed (machine migration)
+    register(&manifest).await?;
+
+    // Print session context
+    session::print_restored_context(&project_root, &manifest).await?;
     Ok(())
 }
 
