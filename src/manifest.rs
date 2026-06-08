@@ -11,6 +11,18 @@ use uuid::Uuid;
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EvolutionEntry {
+    pub timestamp: String,
+    pub file_path: String,
+    pub tweak:     String,
+    pub reason:    String,
+}
+
+fn default_intent() -> String {
+    "A universal persistent memory layer and context compiler for AI coding agents.".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NeuronManifest {
     /// Unique project ID (UUID v4). Stable across machines.
     pub id: Uuid,
@@ -32,6 +44,14 @@ pub struct NeuronManifest {
 
     /// When the manifest was last read or written.
     pub last_accessed: DateTime<Utc>,
+
+    /// Compressed high-level summary of the overall project goal.
+    #[serde(default = "default_intent")]
+    pub top_level_intent: String,
+
+    /// Evolution ledger tracking changes across sessions.
+    #[serde(default)]
+    pub evolution_ledger: Vec<EvolutionEntry>,
 
     /// User-defined tags for searching/grouping.
     #[serde(default)]
@@ -100,6 +120,8 @@ impl NeuronManifest {
             language: language.to_string(),
             created_at: now,
             last_accessed: now,
+            top_level_intent: default_intent(),
+            evolution_ledger: vec![],
             tags: vec![],
             config: ManifestConfig::default(),
         }

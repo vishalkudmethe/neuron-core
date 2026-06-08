@@ -222,7 +222,7 @@ pub async fn regenerate_session_context(project_root: &Path, manifest: &NeuronMa
     let recent_files: Vec<String> = if db_path.exists() {
         let pool = search::open_local_db(&db_path).await?;
         let rows: Vec<(String,)> = sqlx::query_as(
-            "SELECT DISTINCT path FROM memory_units WHERE unit_type = 'file' ORDER BY updated_at DESC LIMIT 8"
+            "SELECT DISTINCT file_path FROM memory_units WHERE unit_type = 'file' ORDER BY updated_at DESC LIMIT 8"
         )
         .fetch_all(&pool)
         .await
@@ -259,15 +259,80 @@ pub async fn regenerate_session_context(project_root: &Path, manifest: &NeuronMa
     Ok(context_content)
 }
 
-/// Print the rich, ready-to-paste agent context.
+/// Print the v7 NEURON ACTIVE WORKSPACE CONTEXT block — optimised for AI agent pasting.
 pub async fn print_agent_context(project_root: &Path) -> Result<()> {
     let manifest = NeuronManifest::load(project_root).await?;
-    let context_content = regenerate_session_context(project_root, &manifest).await?;
+    let db_path  = utils::local_db_path(project_root);
+    let git_branch = git::current_branch(project_root).unwrap_or_else(|_| "unknown".to_string());
 
-    println!("\n{}", "=== COPY BELOW THIS LINE FOR YOUR AI AGENT ===".green().bold());
-    println!("{context_content}");
-    println!("{}\n", "=============================================".green().bold());
+    // Symbol count (exclude raw file units)
+    let unit_count: i64 = if db_path.exists() {
+        let pool = search::open_local_db(&db_path).await?;
+        sqlx::query_as("SELECT COUNT(*) FROM memory_units WHERE unit_type != 'file'")
+            .fetch_one(&pool).await.unwrap_or((0,)).0
+    } else { 0 };
 
+    // Top symbols per file (5 files x 3 symbols)
+    let modules_md: String = if db_path.exists() {
+        let pool = search::open_local_db(&db_path).await?;
+        let files: Vec<(String,)> = sqlx::query_as(
+            "SELECT DISTINCT file_path FROM memory_units WHERE unit_type != 'file' ORDER BY updated_at DESC LIMIT 5"
+        ).fetch_all(&pool).await.unwrap_or_default();
+        let mut out = String::new();
+        for (fp,) in files {
+            out.push_str(&format!("\n### Module: `{}`\n", fp));
+            let syms: Vec<(String, String, Option<String>)> = sqlx::query_as(
+                "SELECT symbol_name, symbol_type, semantic_intent FROM memory_units \
+                 WHERE file_path = ?1 AND unit_type != 'file' LIMIT 3"
+            ).bind(&fp).fetch_all(&pool).await.unwrap_or_default();
+            for (name, kind, intent) in syms {
+                let d = intent.filter(|s| !s.is_empty()).unwrap_or_else(|| "—".into());
+                out.push_str(&format!("*   `{}` ({}) - *Intent:* {}\n", name, kind, d));
+            }
+        }
+        if out.is_empty() {
+            "*(No symbols indexed yet — run `neuron watch` to index your codebase)*".to_string()
+        } else { out }
+    } else {
+        "*(No symbols indexed yet — run `neuron watch` to index your codebase)*".to_string()
+    };
+
+    // Evolution ledger — last 3 entries
+    let ledger_md: String = if manifest.evolution_ledger.is_empty() {
+        "*   No tweaks recorded yet — start `neuron watch` to begin tracking.".to_string()
+    } else {
+        manifest.evolution_ledger.iter().rev().take(3).map(|e|
+            format!("*   **{}** - *Tweak:* {} -> *Reason:* {}", e.timestamp, e.tweak, e.reason)
+        ).collect::<Vec<_>>().join("\n")
+    };
+
+    let context_block = format!(
+"# NEURON ACTIVE WORKSPACE CONTEXT
+> **Project:** {} | **Branch:** `{}` | **Memory Units:** {}
+
+## 🎯 TOP-LEVEL INTENT
+{}
+
+## 🛠️ RECENT ARCHITECTURAL TWEAKS (Last 3 Sessions)
+{}
+
+## 🧩 CRITICAL MODULES & SYMBOLS IN FOCUS
+{}",
+        manifest.name, git_branch, unit_count,
+        manifest.top_level_intent,
+        ledger_md,
+        modules_md,
+    );
+
+    // Persist
+    let ctx_path = project_root.join(".neuron").join("session_context.md");
+    fs::write(&ctx_path, &context_block).await?;
+
+    println!("\n{}", "╔══════════════════════════════════════════════════════╗".bright_cyan());
+    println!("{}",  "║      NEURON — COPY BELOW FOR YOUR AI AGENT          ║".bright_cyan().bold());
+    println!("{}\n", "╚══════════════════════════════════════════════════════╝".bright_cyan());
+    println!("{}", context_block);
+    println!("\n{}\n", "══════════════════════════════════════════════════════".bright_cyan());
     Ok(())
 }
 
@@ -311,48 +376,25 @@ fn build_context_md(
         .unwrap_or_else(|| "*(no snapshots yet)*".to_string());
 
     format!(
-        r#"# Neuron Session Context
-**Project**: {} ({})
-**Language**: {}
-**Restored**: {}
-**Status**: 🟢 Active
-
----
-
-## Identity
-- **Project ID**: `{}`
-- **Root**: `{}`
-- **Memory Units**: {}
-
-## Git State
-- **Branch**: `{}`
-- **Last Commit**: {}
-
-## Recently Indexed Files
-{}
-
-## Last Conversation Snapshot
-{}
-
-## Next Steps
-1. Review recent files for changes since last session
-2. Run `neuron search <topic>` to locate prior decisions
-3. Run `neuron watch` to resume real-time indexing
-
----
-*Auto-generated by Neuron session engine. Run `neuron restore` to regenerate.*
-"#,
-        manifest.name,
-        manifest.id,
-        manifest.language,
-        now,
-        manifest.id,
-        manifest.root_path.display(),
-        unit_count,
-        git_branch,
-        last_commit,
-        files_md,
-        conv_md
+        "# Neuron Session Context\n\
+**Project**: {name} ({id}) | **Language**: {lang} | **Branch**: `{branch}`\n\
+**Memory Units**: {units} | **Restored**: {now}\n\
+**Status**: 🟢 Active\n\n\
+## Git State\n\
+- **Last Commit**: {commit}\n\n\
+## Recently Indexed Files\n{files}\n\n\
+## Last Conversation Snapshot\n{conv}\n\n\
+---\n\
+*Auto-generated by Neuron v7. Run `neuron restore` to regenerate.*\n",
+        name   = manifest.name,
+        id     = manifest.id,
+        lang   = manifest.language,
+        branch = git_branch,
+        units  = unit_count,
+        now    = now,
+        commit = last_commit,
+        files  = files_md,
+        conv   = conv_md,
     )
 }
 

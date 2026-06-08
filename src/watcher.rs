@@ -225,18 +225,21 @@ async fn process_file_change(
     };
 
     // Check existing hash in DB to avoid redundant re-indexing
-    let existing: Option<(String,)> =
-        sqlx::query_as("SELECT sha256 FROM memory_units WHERE path = ?1 LIMIT 1")
+    let existing: Option<(String, i64)> =
+        sqlx::query_as("SELECT sha256, COUNT(*) FROM memory_units WHERE file_path = ?1 GROUP BY sha256 LIMIT 1")
             .bind(path.to_string_lossy().as_ref())
             .fetch_optional(pool)
-            .await?;
+            .await
+            .unwrap_or(None);
 
-    if let Some((existing_hash,)) = existing {
-        if existing_hash == new_hash {
+    if let Some((existing_hash, _)) = &existing {
+        if *existing_hash == new_hash {
             debug!("Unchanged: {}", path.display());
             return Ok(());
         }
     }
+
+    let prior_symbol_count: i64 = existing.map(|(_, c)| c).unwrap_or(0);
 
     // Parse symbols from changed file
     let rel_path = path
@@ -256,6 +259,33 @@ async fn process_file_change(
 
     // Upsert into SQLite
     search::upsert_file(pool, project_root, path, &new_hash, &symbols).await?;
+
+    // ── Evolution Ledger ─────────────────────────────────────────────────────
+    // Record this change in the manifest's evolution_ledger so neuron context
+    // can surface it in the RECENT ARCHITECTURAL TWEAKS section.
+    if let Ok(mut manifest) = NeuronManifest::load(project_root).await {
+        let new_count = symbols.len() as i64;
+        let tweak = if new_count > prior_symbol_count {
+            format!("`{}` — added {} symbol(s)", rel_path, new_count - prior_symbol_count)
+        } else if new_count < prior_symbol_count {
+            format!("`{}` — removed {} symbol(s)", rel_path, prior_symbol_count - new_count)
+        } else {
+            format!("`{}` — modified (symbols unchanged)", rel_path)
+        };
+        let entry = crate::manifest::EvolutionEntry {
+            timestamp: Utc::now().format("%Y-%m-%d %H:%M UTC").to_string(),
+            file_path: rel_path.clone(),
+            tweak,
+            reason: "Detected by neuron watch file-change pipeline".to_string(),
+        };
+        manifest.evolution_ledger.push(entry);
+        // Cap ledger at 50 entries
+        if manifest.evolution_ledger.len() > 50 {
+            let drain_to = manifest.evolution_ledger.len() - 50;
+            manifest.evolution_ledger.drain(..drain_to);
+        }
+        let _ = manifest.save(project_root).await;
+    }
 
     Ok(())
 }

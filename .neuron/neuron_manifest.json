@@ -5,7 +5,9 @@
   "root_path": "D:\\AI Neuron",
   "language": "rust",
   "created_at": "2026-06-08T05:30:16.270582600Z",
-  "last_accessed": "2026-06-08T05:44:51.948822700Z",
+  "last_accessed": "2026-06-08T06:19:08.229847800Z",
+  "top_level_intent": "A universal persistent memory layer and context compiler for AI coding agents.",
+  "evolution_ledger": [],
   "tags": [],
   "config": {
     "watcher_debounce_ms": 300,
