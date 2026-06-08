@@ -7,6 +7,7 @@ mod config;
 mod conversation;
 mod dependency;
 mod git;
+mod graph;
 mod intent;
 mod loop_guard;
 mod manifest;
@@ -213,6 +214,13 @@ enum Commands {
         #[arg(short, long)]
         err: String,
     },
+
+    /// Visualise the cross-workspace dependency graph and trace signature mutations
+    Graph {
+        /// Recursively trace mutation cascades for a specific symbol
+        #[arg(short, long)]
+        trace: Option<String>,
+    },
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -382,6 +390,14 @@ async fn main() -> Result<()> {
             let neuron_root = project_manager::discover_project_root().await?;
             intent::write_error_log(&neuron_root, &cmd, &err).await?;
         }
+
+        Commands::Graph { trace } => {
+            if let Some(symbol) = trace {
+                graph::trace_symbol_cascade(&symbol).await?;
+            } else {
+                graph::render_topology_graph().await?;
+            }
+        }
     }
 
     Ok(())
@@ -406,7 +422,7 @@ fn print_banner() {
     println!(
         "  {} {}  {}\n",
         "Universal Persistent Memory Layer".white().bold(),
-        "v12".bright_yellow().bold(),
+        "v13".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );
 }

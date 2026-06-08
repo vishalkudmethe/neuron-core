@@ -1,5 +1,5 @@
 # Project Neuron — Master Brain
-**Version**: v12 — Live Intent Engine & Continuous Context Stream
+**Version**: v13 — Topological Memory Graph & Visual State Engine
 **Status**: Active Development
 **Last Updated**: 2026-06-08
 
@@ -9,7 +9,7 @@
 
 Neuron is the Universal Persistent Memory Layer for AI Coding Agents. It maintains complete, portable project memory (code, conversations, decisions, architecture) that survives folder changes, PC restarts, logouts, account switches, directory switches, and machine migrations.
 
-With v12, Neuron transitions from an **on-demand prompt generator** into a **continuous context streaming platform**. It monitors real-time developer activity, assigns focus scores to files based on edit recency, and serves dynamically assembled, proximity-aware context payloads via the local HTTP bridge — eliminating the need to manually re-run `neuron context` during active development sessions.
+With v13, Neuron implements **Zero-Dependency Terminal Visualization**. It translates complex multi-repo topologies, cross-project dependencies, real-time edit focal points, and interface signature mutations into a beautiful, ASCII-based terminal memory network graph (`neuron graph`) and interactive cascading mutation tracer (`neuron graph --trace <symbol>`).
 
 ---
 
@@ -17,146 +17,88 @@ With v12, Neuron transitions from an **on-demand prompt generator** into a **con
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                       NEURON v12 CORE ENGINE                           │
+│                       NEURON v13 CORE ENGINE                           │
 │                                                                        │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  Intent Tracker (src/intent.rs)                                 │   │
-│  │  neuron session --track                                         │   │
-│  │  Polls .neuron/intent_log.json for file modification recency    │   │
-│  │  Focus Scores: modified <2m=HIGH, <10m=MED, else=LOW           │   │
+│  │  Topological Graph Engine (src/graph.rs)                        │   │
+│  │  neuron graph                                                   │   │
+│  │  Renders parent/child dependency DAG with box-drawing characters│   │
+│  │  Integrates v12 intent logs to display activity hotspots       │   │
 │  └──────────────────────────────┬──────────────────────────────────┘   │
 │                                 │                                      │
 │  ┌──────────────────────────────▼──────────────────────────────────┐   │
-│  │  Stream Compiler (src/stream.rs)                                │   │
-│  │  GET /v1/context/stream (HTTP bridge, bearer auth)              │   │
-│  │  Proximity Chunk Assembly:                                      │   │
-│  │    1. Highest-scoring files (full source, capped)               │   │
-│  │    2. Adjacent module symbol definitions                        │   │
-│  │    3. Active v11 signature mutations on those paths             │   │
-│  │    4. Active execution failure section (if log-error used)      │   │
-│  │  Token Sliding Scale: profile token_cap / 6 per chunk          │   │
+│  │  Cascading Mutation Tracer (src/graph.rs)                       │   │
+│  │  neuron graph --trace <symbol>                                  │   │
+│  │  Maps symbol declaration → lists all child calling sites        │   │
+│  │  Appends [⚠️ MUTATED] warning for un-synced consumer files      │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                        │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │  Error Telemetry (src/main.rs → intent.rs)                      │   │
-│  │  neuron log-error --cmd <cmd> --err <stderr>                    │   │
-│  │  Writes to .neuron/last_error.json                              │   │
-│  │  Next stream payload includes 🔴 Active Execution Failure block │   │
+│  │  CLI Interface Router (src/main.rs)                              │   │
+│  │  Dispatches `graph` command and `--trace` parameters            │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                        │
 │  ┌──────────────────────────────────────────────────────────────┐      │
-│  │  v11 Subsystems (all preserved)                              │      │
-│  │  dependency.rs / analyzer.rs / bridge.rs / sanitize.rs       │      │
+│  │  v11/v12 Core Engines                                        │      │
+│  │  dependency.rs / analyzer.rs / intent.rs / stream.rs         │      │
 │  └──────────────────────────────────────────────────────────────┘      │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. v12 FEATURE SPECIFICATION
+## 3. v13 FEATURE SPECIFICATION
 
-### 3.1 Asynchronous Activity & Intent Tracker (`src/intent.rs`)
+### 3.1 Terminal Topological Graph Engine (`src/graph.rs`)
 
-Command: `neuron session --track`
+Command: `neuron graph`
 
-**Focus scoring model:**
+**ASCII Rendering Canvas:**
+- Gathers all projects from global index.
+- Resolves DAG layers based on directional dependency arcs from `workspace_dependencies`.
+- Formats each node box with name, language, and status indicators:
+  - **High-Activity Hot-Spot (Cyan/Bold)**: If modified within 2 minutes (derived from `.neuron/intent_log.json`).
+  - **Stale/Inactive (Dim/Low-Contrast)**: Untouched for more than 48 hours.
+- Draws vertical and horizontal connector lines (`┌`, `─`, `┼`, `┐`, `▼`, `▲`) representing workspace relationships.
 
-| Condition | Score |
-|---|---|
-| File modified within last 2 minutes | HIGH (100) |
-| File modified within last 10 minutes | MEDIUM (50) |
-| File is a registered parent dependency symbol file | MEDIUM (40) |
-| All other indexed files | LOW (10) |
+### 3.2 Interactive Mutation Tracer (`src/graph.rs`)
 
-**Persistence:** Focus state serialised to `.neuron/intent_log.json` (updated on every poll cycle). Structure:
+Command: `neuron graph --trace <symbol_name>`
 
-```json
-{
-  "updated_at": "2026-06-08T12:00:00Z",
-  "entries": [
-    { "file_path": "src/main.rs", "score": 100, "last_modified": "..." },
-    ...
-  ],
-  "last_error": null
-}
-```
-
-**Polling:** 15-second interval. Non-blocking tokio task. Reads file mtimes from OS, updates scores, writes JSON.
-
-### 3.2 Live Stream Context Compiler (`src/stream.rs`)
-
-Endpoint: `GET /v1/context/stream` — added alongside the existing `/v1/context` route in `bridge.rs`.
-
-**Proximity chunk assembly algorithm:**
-1. Load `.neuron/intent_log.json` — sort by score descending.
-2. Take top N files (N = `token_cap / 15000`, minimum 1, maximum 5).
-3. For each file: read full source content from disk, cap at `token_cap / (6 * N)` chars.
-4. Query the local FTS5 index for top 3 symbol definitions in adjacent modules (files in the same directory).
-5. Check `signature_snapshots` for any mutations on those file paths within 48h; append inline.
-6. If `.neuron/last_error.json` exists and is less than 10 minutes old, inject a `🔴 Active Execution Failure` block.
-7. Wrap in `<!-- NEURON_STREAM_START --> … <!-- NEURON_STREAM_END -->` delimiters.
-
-**Token sliding scale:**
-- `antigravity` profile: up to 15,000 chars per focal file chunk
-- `claude` profile: up to 8,000 chars per focal file chunk
-- `openai` profile: up to 3,000 chars per focal file chunk
-
-### 3.3 Shell Execution Error Inflow (`src/main.rs`)
-
-Command: `neuron log-error --cmd <command> --err <stderr_output>`
-
-**Writes** `.neuron/last_error.json`:
-```json
-{
-  "command": "cargo build",
-  "stderr":  "error[E0308]: mismatched types ...",
-  "logged_at": "2026-06-08T12:00:00Z"
-}
-```
-
-The next `/v1/context/stream` response automatically picks this up and appends:
-```
-## 🔴 Active Execution Failure
-**Command:** cargo build
-**Error:**
-error[E0308]: mismatched types ...
-```
+**Cascading mutation analysis flow:**
+1. Scan `signature_snapshots` in global index to find where `<symbol_name>` is declared.
+2. Print symbol details: type, parent project, and its current signature hash.
+3. Traverse downstream dependencies in the topology tree.
+4. Open the local SQLite index of each child project, running FTS5 queries to identify all calling files containing references to the symbol.
+5. Compare file modification times against the mutation's `changed_at` timestamp.
+6. Print the tracing tree:
+   - Mark files updated after the mutation as `[✓ Synced]`.
+   - Mark files older than the parent signature mutation as `[⚠️ MUTATED] (At Risk)`.
 
 ---
 
-## 4. CLI REFERENCE (v12)
+## 4. CLI REFERENCE (v13)
 
 | Command | Flags | Description |
 |---|---|---|
+| `neuron graph` | `--trace <symbol>` | Render interactive memory topology map or trace mutation cascade |
 | `neuron session` | `--track` | Start background intent tracker (focus score poller) |
-| `neuron log-error` | `--cmd` `--err` | Pipe build/run errors into intent state for next stream |
-| `neuron context` | `--export` `--include <alias>` | On-demand context; auto-injects parent mutations |
-| `neuron watch` / `start` | `--path --bridge` | Watcher + HTTP bridge (`/v1/context` + `/v1/context/stream`) |
+| `neuron log-error` | `--cmd` `--err` | Telemetry build-error logging |
+| `neuron context` | `--export` `--include <alias>` | On-demand context with auto parent mutations |
+| `neuron watch` / `start` | `--path --bridge` | Watcher + HTTP bridge |
 | `neuron power-up <path>` | `--alias` | Ingest foreign workspace |
 | `neuron link-deps` | `--parent --child --unlink --list` | Manage dependency arcs |
-| `neuron analyze` | `--parent` | Structural mutation scan + impact matrix |
-| `neuron restore` | `--from` | Auto-discover + restore context |
-| `neuron status` | | Status + PATH check |
-| `neuron diagnose` | | Full environment & DB health audit |
-| `neuron switch <name>` | | Switch active project |
-| `neuron list` | `--long` | All known projects |
-| `neuron search <query>` | `--global --limit --interactive` | FTS5 search or interactive shell |
-| `neuron snapshot` | `--note` | Force snapshot |
-| `neuron backup` | | Manual backup |
-| `neuron export` | `--output` | Export `.tar.gz` archive |
+| `neuron analyze` | `--parent` | Mutation scan + impact matrix |
+| `neuron switch` / `list` | | Switch workspace or list all known registries |
+| `neuron diagnose` | | Health audit |
 
 ---
 
 ## 5. SECURITY & PERFORMANCE MODEL
 
-| Concern | Mitigation |
-|---|---|
-| Intent log file size | Capped at 500 entries; oldest evicted |
-| Error log staleness | Only injected if `last_error.json` < 10 minutes old |
-| Source content in stream | Passed through `sanitize::sanitize_content()` before serving |
-| Bridge auth | Same Bearer token as `/v1/context` |
-| Background poller overhead | Tokio task with 15s sleep — zero blocking |
-| Token overflow | Hard-capped per profile before any output is written |
+- **DAG rendering safety**: Handles cyclic dependencies gracefully without infinite recursion by tracking visited node IDs in the hierarchy traversal.
+- **Trace performance**: Scans child files using index lookups instead of slow directory grep operations.
+- **Escape sequence compliance**: Uses ANSI terminal codes compatible with cross-platform shells (Windows PowerShell/cmd, Linux bash, macOS zsh).
 
 ---
 
