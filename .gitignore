@@ -6,6 +6,7 @@ Cargo.lock
 .neuron/index.sqlite
 .neuron/index.sqlite-shm
 .neuron/index.sqlite-wal
+.neuron/watcher.lock
 .neuron/backups/
 
 # OS artifacts
