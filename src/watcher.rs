@@ -159,7 +159,6 @@ pub async fn start_watcher(project_root: &Path) -> Result<()> {
     let tx_clone   = tx.clone();
 
     std::thread::spawn(move || {
-        let rt = tokio::runtime::Handle::current();
         let debouncer = Arc::new(Mutex::new(Debouncer::new(debounce_ms)));
 
         let mut watcher: RecommendedWatcher = {
@@ -178,7 +177,7 @@ pub async fn start_watcher(project_root: &Path) -> Result<()> {
 
                             let kind = classify_event(path, &event.kind);
                             if let Some(kind) = kind {
-                                let mut deb = rt.block_on(db2.lock());
+                                let mut deb = db2.blocking_lock();
                                 if deb.should_emit(path) {
                                     let _ = tx2.blocking_send(FileEvent {
                                         path:      path.clone(),

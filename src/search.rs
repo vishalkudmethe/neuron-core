@@ -212,7 +212,7 @@ pub async fn search_memory(
         return Ok(());
     }
 
-    let pool = open_local_db(&db_path).await?;
+    let pool = bootstrap_local_db(project_root).await?;
 
     // FTS5 search with ranking
     let rows: Vec<(String, String, Option<String>, Option<String>)> = sqlx::query_as(r#"
@@ -275,7 +275,7 @@ pub async fn search_interactive(project_root: &Path) -> Result<()> {
         return Ok(());
     }
 
-    let pool = open_local_db(&db_path).await?;
+    let pool = bootstrap_local_db(project_root).await?;
 
     println!("\n{}", "╔══════════════════════════════════════════════════════╗".bright_cyan());
     println!("{}", "║   NEURON INTERACTIVE SEARCH — FTS5 Query Shell      ║".bright_cyan().bold());
@@ -375,7 +375,7 @@ pub async fn search_symbols_string(project_root: &Path, query: &str) -> Result<S
     if !db_path.exists() {
         return Ok("No local memory index found.".to_string());
     }
-    let pool = open_local_db(&db_path).await?;
+    let pool = bootstrap_local_db(project_root).await?;
     let rows: Vec<(String, String, Option<String>, Option<String>)> = sqlx::query_as(r#"
         SELECT m.unit_type, m.file_path, m.symbol_name, snippet(memory_fts, 1, '[', ']', '...', 10)
         FROM memory_fts
