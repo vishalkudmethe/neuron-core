@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Neuron — Universal Persistent Memory Layer for AI Agents</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#030712',
+                        darkPanel: '#0A0F1D',
+                        cyanAccent: '#00E5FF',
+                        cyanMuted: '#0891B2',
+                        grayMuted: '#9CA3AF',
+                        terminalHeader: '#1E293B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons wrapper -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #030712;
+            color: #E5E7EB;
+        }
+        /* Custom scrollbar for terminal/monospaced areas */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0F1D;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0891B2;
+            border-radius: 2px;
+        }
+        /* Grid effect decoration */
+        .grid-bg {
+            background-image: linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .scanline {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 229, 255, 0.04) 50%,
+                rgba(0, 229, 255, 0.04)
+            );
+            background-size: 100% 4px;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased grid-bg relative min-h-screen selection:bg-cyanMuted/30 selection:text-cyanAccent">
+
+    <!-- Scanline visual overlay -->
+    <div class="absolute inset-0 pointer-events-none scanline opacity-30 z-50"></div>
+
+    <!-- NAVBAR -->
+    <nav class="sticky top-0 z-40 border-b border-cyanMuted/20 bg-darkBg/80 backdrop-blur-md px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <!-- Terminal symbol -->
+                <div class="w-2.5 h-2.5 rounded-full bg-cyanAccent animate-pulse"></div>
+                <span class="font-mono text-sm tracking-widest text-white font-bold flex items-center gap-2">
+                    NEURON <span class="text-cyanAccent border border-cyanAccent/30 px-1 py-0.5 text-xs rounded bg-cyanMuted/10">CORE v16</span>
+                </span>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-xs font-mono text-grayMuted/80 hidden sm:inline flex items-center gap-1.5">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    STATUS: MCP STDIO RUNNING
+                </span>
+                <span class="bg-cyanAccent/10 text-cyanAccent border border-cyanAccent/30 px-2 py-0.5 text-xs font-mono rounded">
+                    AGPLv3 Compliance
+                </span>
+                <a href="https://github.com" target="_blank" class="text-gray-300 hover:text-cyanAccent transition-colors duration-150" aria-label="GitHub Repository">
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="relative overflow-hidden pt-12 pb-16 px-4">
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyanAccent/20 bg-darkPanel text-xs text-cyanAccent mb-6">
+                <i data-lucide="zap" class="w-3.5 h-3.5 text-cyanAccent"></i>
+                Universal Context Engine
+            </div>
+            
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white mb-6 font-mono leading-none">
+                PROJECT NEURON
+            </h1>
+            <h2 class="text-xl sm:text-2xl font-light text-cyanAccent max-w-3xl mx-auto mb-6">
+                The Universal Persistent Memory Layer for AI Agents
+            </h2>
+            <p class="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-sans">
+                A local-first, zero-dependency context engine (~10.46MB) that bridges multi-gigabyte codebases to LLM reasoning windows via the Model Context Protocol (MCP).
+            </p>
+
+            <!-- Interactive Copy Terminal -->
+            <div class="max-w-xl mx-auto bg-darkPanel border border-cyanAccent/30 rounded-lg shadow-2xl overflow-hidden mb-12">
+                <div class="bg-terminalHeader px-4 py-2 flex items-center justify-between border-b border-cyanMuted/20">
+                    <div class="flex space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+                    </div>
+                    <span class="text-xs font-mono text-gray-400">bash — shell session</span>
+                    <button id="copy-btn" class="text-gray-400 hover:text-cyanAccent transition-colors duration-150" onclick="copyToClipboard()">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-6 text-left font-mono text-sm space-y-3 bg-darkPanel">
+                    <div class="flex">
+                        <span class="text-cyanMuted mr-2 select-none">$</span>
+                        <span class="text-white" id="command-text">cargo install neuron-core && neuron watch</span>
+                    </div>
+                    <div class="text-gray-500 select-none">
+                        [+] Compiled neuron-core production targets (v1.0.0-mcp)<br>
+                        [+] Added local symlink binary to user PATH<br>
+                        [✓] Watching workspace for structural signature mutations...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2">
+                <!-- Windows Download -->
+                <a id="btn-windows"
+                   href="https://github.com/vishalkudmethe/neuron-workspace/releases/latest/download/neuron-windows-x86_64.exe"
+                   class="flex items-center gap-3 px-6 py-3 rounded-lg border border-cyanAccent/40 bg-cyanAccent/10 hover:bg-cyanAccent/20 hover:border-cyanAccent transition-all duration-150 group w-full sm:w-auto"
+                   download>
+                    <!-- Windows SVG Icon -->
+                    <svg class="w-5 h-5 text-cyanAccent fill-current flex-shrink-0" viewBox="0 0 24 24">
+                        <path d="M3 5.557L9.93 4.63l.003 6.845-6.927.04L3 5.557zm6.926 6.65.004 6.85L3.003 18.12v-5.952l6.923.04zm.84-6.78L20.175 4l.001 8.294-9.41.073-.001-4.94zm9.411 8.157-.001 4.932L11.77 19.4l-.005-4.98 9.413.164z"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs text-gray-400 font-sans leading-none mb-0.5">Download for</div>
+                        <div class="text-sm font-mono text-white font-semibold leading-none">Windows x86_64</div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4 text-cyanAccent/60 group-hover:text-cyanAccent transition-colors ml-auto sm:ml-2 flex-shrink-0"></i>
+                </a>
+
+                <!-- macOS Apple Silicon Download -->
+                <a id="btn-macos-arm"
+                   href="https://github.com/vishalkudmethe/neuron-workspace/releases/latest/download/neuron-macos-arm64"
+                   class="flex items-center gap-3 px-6 py-3 rounded-lg border border-cyanMuted/30 bg-darkPanel hover:border-cyanAccent/40 hover:bg-cyanAccent/5 transition-all duration-150 group w-full sm:w-auto"
+                   download>
+                    <!-- Apple SVG Icon -->
+                    <svg class="w-5 h-5 text-gray-300 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs text-gray-400 font-sans leading-none mb-0.5">Download for</div>
+                        <div class="text-sm font-mono text-white font-semibold leading-none">macOS Apple Silicon</div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4 text-gray-500 group-hover:text-cyanAccent transition-colors ml-auto sm:ml-2 flex-shrink-0"></i>
+                </a>
+
+                <!-- macOS Intel Download -->
+                <a id="btn-macos-intel"
+                   href="https://github.com/vishalkudmethe/neuron-workspace/releases/latest/download/neuron-macos-intel-x86_64"
+                   class="flex items-center gap-3 px-6 py-3 rounded-lg border border-cyanMuted/30 bg-darkPanel hover:border-cyanAccent/40 hover:bg-cyanAccent/5 transition-all duration-150 group w-full sm:w-auto"
+                   download>
+                    <svg class="w-5 h-5 text-gray-300 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs text-gray-400 font-sans leading-none mb-0.5">Download for</div>
+                        <div class="text-sm font-mono text-white font-semibold leading-none">macOS Intel x86_64</div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4 text-gray-500 group-hover:text-cyanAccent transition-colors ml-auto sm:ml-2 flex-shrink-0"></i>
+                </a>
+            </div>
+
+            <p class="text-[11px] text-gray-600 font-mono mt-4">
+                Binaries are published automatically via GitHub Actions on every tagged release.
+                <a href="https://github.com/vishalkudmethe/neuron-workspace/releases" target="_blank" class="text-cyanMuted hover:text-cyanAccent transition-colors">View all releases →</a>
+            </p>
+
+        </div>
+    </header>
+
+    <!-- ARCHITECTURAL ISOLATION DIAGRAM -->
+    <section class="max-w-7xl mx-auto px-4 py-12 border-t border-cyanMuted/20">
+        <div class="text-center mb-10">
+            <h3 class="text-sm font-mono tracking-widest text-cyanAccent uppercase">Localhost Perimeter Boundary</h3>
+            <h2 class="text-2xl sm:text-3xl font-mono text-white font-bold mt-2">Zero-Cloud Local Pipeline</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-7 gap-4 items-center bg-darkPanel/40 p-6 border border-cyanMuted/20 rounded-xl relative overflow-hidden">
+            <!-- Source Storage Node -->
+            <div class="lg:col-span-2 border border-cyanMuted/30 bg-darkPanel p-4 rounded-lg flex flex-col items-center justify-center text-center h-40">
+                <i data-lucide="database" class="w-8 h-8 text-cyanAccent mb-2"></i>
+                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Local Workspaces</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">Local Storage</div>
+                <div class="text-[11px] text-gray-500 mt-1">2.74 GB Source Code Files</div>
+            </div>
+
+            <!-- Connector Arrow -->
+            <div class="flex items-center justify-center lg:col-span-1 h-8 lg:h-auto">
+                <i data-lucide="arrow-right" class="w-6 h-6 text-cyanAccent/50 rotate-90 lg:rotate-0"></i>
+            </div>
+
+            <!-- Stdio Pipe Core -->
+            <div class="lg:col-span-2 border-2 border-cyanAccent bg-cyanMuted/5 p-4 rounded-lg flex flex-col items-center justify-center text-center h-44 shadow-[0_0_15px_rgba(0,229,255,0.05)]">
+                <i data-lucide="terminal" class="w-8 h-8 text-cyanAccent mb-2"></i>
+                <div class="font-mono text-xs text-cyanAccent uppercase tracking-widest font-semibold">neuron.exe via mcp</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">Stdio Pipe / JSON-RPC</div>
+                <div class="text-[11px] text-gray-400 mt-1">RAM-Only Deduplication & Sanitization</div>
+            </div>
+
+            <!-- Connector Arrow -->
+            <div class="flex items-center justify-center lg:col-span-1 h-8 lg:h-auto">
+                <i data-lucide="arrow-right" class="w-6 h-6 text-cyanAccent/50 rotate-90 lg:rotate-0"></i>
+            </div>
+
+            <!-- Output Agent / LLM -->
+            <div class="lg:col-span-1 border border-cyanMuted/30 bg-darkPanel p-4 rounded-lg flex flex-col items-center justify-center text-center h-40">
+                <i data-lucide="shield-check" class="w-8 h-8 text-cyanAccent mb-2"></i>
+                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Secure Payload</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">Local Agent</div>
+                <div class="text-[11px] text-gray-500 mt-1">Cursor / Claude / Copilot</div>
+            </div>
+        </div>
+        
+        <p class="text-xs text-center font-mono text-gray-500 mt-4">
+            *No raw files leave your machine. Only stripped structures, signatures, and sanitised text are emitted to reasoning engines.
+        </p>
+    </section>
+
+    <!-- CORE PROBLEMS VS NEURON MATRIX -->
+    <section class="max-w-7xl mx-auto px-4 py-16 border-t border-cyanMuted/20">
+        <div class="text-center mb-12">
+            <h3 class="text-sm font-mono tracking-widest text-cyanAccent uppercase">Comparative Security Matrix</h3>
+            <h2 class="text-2xl sm:text-3xl font-mono text-white font-bold mt-2">Core Agent Vulnerabilities vs. Neuron Handling</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <!-- Left: Problem -->
+            <div class="bg-red-950/10 border border-red-500/20 rounded-xl p-6">
+                <h4 class="text-lg font-mono text-red-400 font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="alert-octagon" class="w-5 h-5"></i> Raw Agent Bottlenecks
+                </h4>
+                <div class="space-y-6">
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">1. Context Saturation</h5>
+                        <p class="text-xs text-gray-400 mt-1">Flat directory parsing drops full file content into LLM windows, wasting valuable tokens on repetitive boilerplates.</p>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">2. Cross-Project Blind Spots</h5>
+                        <p class="text-xs text-gray-400 mt-1">Agents lack context of sibling projects or packages, making signature updates extremely error-prone.</p>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">3. Sensitive Data Leaks</h5>
+                        <p class="text-xs text-gray-400 mt-1">Unprocessed logs, database connections, and environment files leak directly to commercial cloud providers.</p>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">4. Autonomous Resource Loops</h5>
+                        <p class="text-xs text-gray-400 mt-1">Without monitoring, agents repeatedly run identical compiler routines and cycle through file reversions indefinitely.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Solution -->
+            <div class="bg-cyanAccent/5 border border-cyanAccent/30 rounded-xl p-6 shadow-[0_0_15px_rgba(0,229,255,0.02)]">
+                <h4 class="text-lg font-mono text-cyanAccent font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="w-5 h-5"></i> Neuron Resolution Engine
+                </h4>
+                <div class="space-y-6">
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">1. Deduplication Stream Compiler</h5>
+                        <p class="text-xs text-cyanAccent/80 mt-1">Filters project assets dynamically, keeping structure and signature definitions while stripping token bloat.</p>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">2. Cross-Project Dependency Linker</h5>
+                        <p class="text-xs text-cyanAccent/80 mt-1">Maintains child-parent dependency trees with instant notification warnings when upstream APIs modify signatures.</p>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">3. Local Sanitization pipeline</h5>
+                        <p class="text-xs text-cyanAccent/80 mt-1">Intercepts database queries and outputs to scrub passwords, raw keys, and proprietary tokens before payload delivery.</p>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-mono text-white font-bold">4. Self-Healing Loop Guards</h5>
+                        <p class="text-xs text-cyanAccent/80 mt-1">Monitors system changes and blocks recurring file modifications. Instantly alerts user if loop count crosses threshold.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SALIENT FEATURES DASHBOARD -->
+    <section class="max-w-7xl mx-auto px-4 py-16 border-t border-cyanMuted/20">
+        <div class="text-center mb-12">
+            <h3 class="text-sm font-mono tracking-widest text-cyanAccent uppercase">Functional Capabilities</h3>
+            <h2 class="text-2xl sm:text-3xl font-mono text-white font-bold mt-2">Salient Features Dashboard</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Feature 1 -->
+            <div class="border border-cyanMuted/20 bg-darkPanel p-6 rounded-xl relative hover:border-cyanAccent/40 transition-colors duration-150 group">
+                <i data-lucide="cpu" class="w-6 h-6 text-cyanAccent mb-4 group-hover:scale-110 transition-transform duration-150"></i>
+                <h4 class="text-base font-mono text-white font-semibold mb-2">Native MCP Host</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Provides stdin/stdout communication mapping perfectly to the standard Model Context Protocol. Exposes local context directly to agent plugins.
+                </p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="border border-cyanMuted/20 bg-darkPanel p-6 rounded-xl relative hover:border-cyanAccent/40 transition-colors duration-150 group">
+                <i data-lucide="file-json" class="w-6 h-6 text-cyanAccent mb-4 group-hover:scale-110 transition-transform duration-150"></i>
+                <h4 class="text-base font-mono text-white font-semibold mb-2">AST Symbol Indexing</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Understands project structure at syntax level. Maps classes, structures, and declarations into SQLite index for sub-millisecond retrieval.
+                </p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="border border-cyanMuted/20 bg-darkPanel p-6 rounded-xl relative hover:border-cyanAccent/40 transition-colors duration-150 group">
+                <i data-lucide="link" class="w-6 h-6 text-cyanAccent mb-4 group-hover:scale-110 transition-transform duration-150"></i>
+                <h4 class="text-base font-mono text-white font-semibold mb-2">Multi-Project Linker</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Establish topological linkages. Track parent-child workspace relationships and trace cascades when signature hashes change.
+                </p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="border border-cyanMuted/20 bg-darkPanel p-6 rounded-xl relative hover:border-cyanAccent/40 transition-colors duration-150 group">
+                <i data-lucide="eye-off" class="w-6 h-6 text-cyanAccent mb-4 group-hover:scale-110 transition-transform duration-150"></i>
+                <h4 class="text-base font-mono text-white font-semibold mb-2">Inline Sanitization</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Auto-detection engine that intercepts outputs and cleans credentials, authentication endpoints, and SSH keys in real-time.
+                </p>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="border border-cyanMuted/20 bg-darkPanel p-6 rounded-xl relative hover:border-cyanAccent/40 transition-colors duration-150 group">
+                <i data-lucide="refresh-cw" class="w-6 h-6 text-cyanAccent mb-4 group-hover:scale-110 transition-transform duration-150"></i>
+                <h4 class="text-base font-mono text-white font-semibold mb-2">Loop Guard Integration</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Self-healing safety watch loops. Flags repetitive compile or command loops to prevent token waste and infinity execution states.
+                </p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="border border-cyanMuted/20 bg-darkPanel p-6 rounded-xl relative hover:border-cyanAccent/40 transition-colors duration-150 group">
+                <i data-lucide="wrench" class="w-6 h-6 text-cyanAccent mb-4 group-hover:scale-110 transition-transform duration-150"></i>
+                <h4 class="text-base font-mono text-white font-semibold mb-2">Auto-Maintenance</h4>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Automated database compression and log rotation. Evicts dead process locks and runs vacuum routines on database files.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-cyanMuted/20 bg-darkPanel/30 py-8 px-4 mt-12">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span class="text-xs font-mono text-grayMuted">
+                &copy; 2026 Project Neuron. All rights reserved.
+            </span>
+            <div class="flex items-center space-x-4">
+                <span class="text-[11px] font-mono text-grayMuted bg-darkBg px-2.5 py-1 border border-cyanMuted/10 rounded">
+                    Built with Local Integrity
+                </span>
+                <span class="text-xs font-mono text-gray-400">
+                    AGPLv3 License
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        function copyToClipboard() {
+            const command = document.getElementById("command-text").innerText;
+            navigator.clipboard.writeText(command).then(() => {
+                const btn = document.getElementById("copy-btn");
+                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-cyanAccent"></i>`;
+                lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i>`;
+                    lucide.createIcons();
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
