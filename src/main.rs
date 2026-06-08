@@ -33,7 +33,7 @@ use tracing_subscriber::{fmt, EnvFilter};
 #[derive(Parser)]
 #[command(
     name    = "neuron",
-    version = "0.5.0",
+    version = "1.0.0",
     author  = "AI Neuron Project",
     about   = "Universal Persistent Memory Layer for AI Coding Agents",
     long_about = r#"

@@ -1,6 +1,6 @@
 [package]
 name        = "neuron"
-version     = "0.5.0"
+version     = "1.0.0"
 edition     = "2021"
 authors     = ["AI Neuron Project"]
 description = "Universal Persistent Memory Layer for AI Coding Agents — v5 Multi-Project"

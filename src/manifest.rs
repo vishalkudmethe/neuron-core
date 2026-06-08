@@ -115,7 +115,7 @@ impl NeuronManifest {
         Self {
             id: Uuid::new_v4(),
             name: name.to_string(),
-            version: "0.5.0".to_string(),
+            version: "1.0.0".to_string(),
             root_path: root_path.to_path_buf(),
             language: language.to_string(),
             created_at: now,
