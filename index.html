@@ -144,6 +144,62 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Download Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2">
+                <!-- Windows Download -->
+                <a id="btn-windows"
+                   href="https://github.com/vishalkudmethe/neuron-workspace/releases/latest/download/neuron-windows-x86_64.exe"
+                   class="flex items-center gap-3 px-6 py-3 rounded-lg border border-cyanAccent/40 bg-cyanAccent/10 hover:bg-cyanAccent/20 hover:border-cyanAccent transition-all duration-150 group w-full sm:w-auto"
+                   download>
+                    <!-- Windows SVG Icon -->
+                    <svg class="w-5 h-5 text-cyanAccent fill-current flex-shrink-0" viewBox="0 0 24 24">
+                        <path d="M3 5.557L9.93 4.63l.003 6.845-6.927.04L3 5.557zm6.926 6.65.004 6.85L3.003 18.12v-5.952l6.923.04zm.84-6.78L20.175 4l.001 8.294-9.41.073-.001-4.94zm9.411 8.157-.001 4.932L11.77 19.4l-.005-4.98 9.413.164z"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs text-gray-400 font-sans leading-none mb-0.5">Download for</div>
+                        <div class="text-sm font-mono text-white font-semibold leading-none">Windows x86_64</div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4 text-cyanAccent/60 group-hover:text-cyanAccent transition-colors ml-auto sm:ml-2 flex-shrink-0"></i>
+                </a>
+
+                <!-- macOS Apple Silicon Download -->
+                <a id="btn-macos-arm"
+                   href="https://github.com/vishalkudmethe/neuron-workspace/releases/latest/download/neuron-macos-arm64"
+                   class="flex items-center gap-3 px-6 py-3 rounded-lg border border-cyanMuted/30 bg-darkPanel hover:border-cyanAccent/40 hover:bg-cyanAccent/5 transition-all duration-150 group w-full sm:w-auto"
+                   download>
+                    <!-- Apple SVG Icon -->
+                    <svg class="w-5 h-5 text-gray-300 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs text-gray-400 font-sans leading-none mb-0.5">Download for</div>
+                        <div class="text-sm font-mono text-white font-semibold leading-none">macOS Apple Silicon</div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4 text-gray-500 group-hover:text-cyanAccent transition-colors ml-auto sm:ml-2 flex-shrink-0"></i>
+                </a>
+
+                <!-- macOS Intel Download -->
+                <a id="btn-macos-intel"
+                   href="https://github.com/vishalkudmethe/neuron-workspace/releases/latest/download/neuron-macos-intel-x86_64"
+                   class="flex items-center gap-3 px-6 py-3 rounded-lg border border-cyanMuted/30 bg-darkPanel hover:border-cyanAccent/40 hover:bg-cyanAccent/5 transition-all duration-150 group w-full sm:w-auto"
+                   download>
+                    <svg class="w-5 h-5 text-gray-300 fill-current flex-shrink-0" viewBox="0 0 24 24">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs text-gray-400 font-sans leading-none mb-0.5">Download for</div>
+                        <div class="text-sm font-mono text-white font-semibold leading-none">macOS Intel x86_64</div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4 text-gray-500 group-hover:text-cyanAccent transition-colors ml-auto sm:ml-2 flex-shrink-0"></i>
+                </a>
+            </div>
+
+            <p class="text-[11px] text-gray-600 font-mono mt-4">
+                Binaries are published automatically via GitHub Actions on every tagged release.
+                <a href="https://github.com/vishalkudmethe/neuron-workspace/releases" target="_blank" class="text-cyanMuted hover:text-cyanAccent transition-colors">View all releases →</a>
+            </p>
+
         </div>
     </header>
 
