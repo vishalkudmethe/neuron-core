@@ -1,12 +1,15 @@
-//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v5)
+//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v9)
 //! CLI entrypoint. All commands are dispatched from here.
 
+mod bridge;
+mod config;
 mod conversation;
 mod git;
 mod loop_guard;
 mod manifest;
 mod parser;
 mod project_manager;
+mod sanitize;
 mod search;
 mod session;
 mod sync;
@@ -62,6 +65,10 @@ enum Commands {
         /// Watch directory (defaults to current dir)
         #[arg(short, long)]
         path: Option<String>,
+
+        /// Spin up localized integration bridge server
+        #[arg(short, long)]
+        bridge: bool,
     },
 
     /// Start the real-time file and git watcher daemon (alias for watch)
@@ -69,6 +76,10 @@ enum Commands {
         /// Watch directory (defaults to current dir)
         #[arg(short, long)]
         path: Option<String>,
+
+        /// Spin up localized integration bridge server
+        #[arg(short, long)]
+        bridge: bool,
     },
 
     /// Generate rich, ready-to-paste context for AI agents
@@ -172,7 +183,7 @@ async fn main() -> Result<()> {
             utils::check_path_registration();
         }
 
-        Commands::Watch { path } | Commands::Start { path } => {
+        Commands::Watch { path, bridge } | Commands::Start { path, bridge } => {
             let neuron_root = match path {
                 Some(p) => {
                     let p_buf = std::path::PathBuf::from(p);
@@ -182,6 +193,9 @@ async fn main() -> Result<()> {
                 }
                 None => project_manager::discover_project_root().await?
             };
+            if bridge {
+                crate::bridge::start_bridge(&neuron_root).await?;
+            }
             println!(
                 "{} Watching {} ...",
                 "▶".green().bold(),

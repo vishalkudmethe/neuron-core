@@ -1,5 +1,5 @@
 # Project Neuron — Master Brain
-**Version**: v8 — Runtime Execution & Agent Pipeline
+**Version**: v9 — Integration Bridge & Secure Profile Sandbox
 **Status**: Active Development
 **Last Updated**: 2026-06-08
 
@@ -9,7 +9,7 @@
 
 Neuron is the Universal Persistent Memory Layer for AI Coding Agents. It maintains complete, portable project memory (code, conversations, decisions, architecture) that survives folder changes, PC restarts, logouts, account switches, directory switches, and machine migrations.
 
-With v8, Neuron becomes **fully operational**: system PATH integration diagnostics, an interactive semantic query shell, a `neuron diagnose` safety auditor, and export-ready context blocks with agent-compatible delimiters.
+With v9, Neuron adds a local HTTP loopback server (Integration Bridge) to eliminate clipboard dependencies, customizable token budget profiles (Neuron.toml), and an intellectual property guard that sanitizes private keys and credentials before saving metadata to SQLite.
 
 ---
 
@@ -17,7 +17,7 @@ With v8, Neuron becomes **fully operational**: system PATH integration diagnosti
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│                     NEURON v8 CORE ENGINE                      │
+│                     NEURON v9 CORE ENGINE                      │
 │                                                                │
 │  ┌──────────┐  ┌───────────────────┐  ┌────────────────────┐  │
 │  │  Watcher │  │  AST Parser       │  │  Project Manager   │  │
@@ -31,97 +31,64 @@ With v8, Neuron becomes **fully operational**: system PATH integration diagnosti
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                │
 │  ┌──────────────────┐  ┌─────────────────────────────────┐    │
-│  │  Diagnostics     │  │  Interactive Query Shell        │    │
-│  │  (neuron diagnose│  │  (neuron search --interactive)  │    │
-│  │   utils.rs)      │  │   search.rs readline loop       │    │
+│  │  Diagnostics     │  │  Privacy Guard & Data Stripper  │    │
+│  │  (neuron diagnose│  │  (src/sanitize.rs regex mask)   │    │
+│  │   utils.rs)      │  │                                 │    │
 │  └──────────────────┘  └─────────────────────────────────┘    │
 │                                                                │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │  Context Engine (session.rs)                            │   │
-│  │  neuron context --export [file]                         │   │
-│  │  Includes <!--NEURON_CONTEXT_START/END--> delimiters    │   │
+│  │  HTTP Integration Bridge (src/bridge.rs)                │   │
+│  │  GET /v1/context (requires Bearer token auth)          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  Token Profile Budgeting (src/config.rs)                │   │
+│  │  Neuron.toml -> antigravity / claude / openai presets    │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. v8 FEATURE SPECIFICATION
+## 3. v9 FEATURE SPECIFICATION
 
-### 3.1 PATH Diagnostics (`src/utils.rs`)
+### 3.1 Localized AI Integration Bridge (`src/bridge.rs`)
 
-`check_path_registration(binary_path: &Path)` runs after `neuron init` and `neuron status`.
+Starts with `neuron watch --bridge` or `neuron start --bridge`.
 
-**Logic:**
-1. Resolve the current binary's path via `std::env::current_exe()`
-2. Read the system `PATH` environment variable and split by `;` (Windows) or `:` (Unix)
-3. Check if the binary's parent directory appears in any PATH entry
-4. If **not found** → print a highlighted, OS-specific shell snippet:
+**Features:**
+1. Launches a background loopback HTTP server on `127.0.0.1:8089`.
+2. Generates a secure, single-use Bearer token on startup, saved to `.neuron/bridge_token`.
+3. Serves `GET /v1/context`, returning the compiled prompt context wrapped in `<!-- NEURON_CONTEXT_START -->` / `<!-- NEURON_CONTEXT_END -->` delimiters.
+4. Requires header `Authorization: Bearer <token>`.
 
-```
-⚠ neuron is not on your PATH.
-To fix this permanently, run:
+### 3.2 Advanced Token Budgeting & Profiling (`src/config.rs`)
 
-  PowerShell:  $env:PATH += ";D:\AI Neuron\target\release"
-               [System.Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";D:\AI Neuron\target\release", "User")
-  CMD:         setx PATH "%PATH%;D:\AI Neuron\target\release"
-  Bash/Zsh:    export PATH="$PATH:/d/AI Neuron/target/release"
-```
+Loads configuration from `Neuron.toml` at the project root.
 
-### 3.2 Interactive Search Shell (`src/search.rs`)
+**Profiles Matrix:**
+- **`profile = "antigravity"`** (Default): Maximize symbol granularity (up to 8 files x 6 symbols per file), and include evolution ledger history up to the 50-item cap.
+- **`profile = "claude"`**: Balanced granularity (5 files x 3 symbols), ignores evolution ledger history.
+- **`profile = "openai"`**: Condenses definitions (3 files x 2 symbols), includes only high-level class, enum, and struct declarations to fit minimal token windows.
 
-`search_interactive(project_root: &Path)` — activated by `neuron search --interactive`.
+### 3.3 Intellectual Property Guard & Data Stripping (`src/sanitize.rs`)
 
-**Behaviour:**
-- Opens the local FTS5 index
-- Prints a prompt `neuron> ` and reads lines from stdin in a loop
-- On each query: runs FTS5 MATCH, renders ranked results (symbol, type, file, semantic_intent)
-- Special commands: `:q` / `:quit` → exit loop, `:help` → print help, empty line → re-prompt
-- Uses `std::io::{stdin, stdout, Write}` — no external readline dependency
+Protects sensitive repository data before database persistence.
 
-### 3.3 `neuron diagnose` (`src/utils.rs` + `src/main.rs`)
-
-`run_diagnostics(project_root: Option<&Path>)` audits:
-
-| Check | Green | Red |
-|---|---|---|
-| Binary on PATH | ✓ Found in PATH | ✗ Not on PATH + fix snippet |
-| Global DB | ✓ Exists + readable | ✗ Missing or locked |
-| Local DB | ✓ memory_units rows > 0 | ⚠ Empty — run `neuron watch` |
-| Loop Guardian | ✓ No active loops | ⚠ N loop events in last window |
-| Watcher processes | ✓ No zombie handles | ⚠ Cannot verify (no daemon PID) |
-
-Output is a clean table using `tabled`.
-
-### 3.4 `neuron context --export` (`src/session.rs`)
-
-`print_agent_context(project_root, export_path: Option<&Path>)`:
-
-- Wraps context block with agent-compatible HTML-style delimiters:
-  ```
-  <!-- NEURON_CONTEXT_START -->
-  ...markdown...
-  <!-- NEURON_CONTEXT_END -->
-  ```
-- If `--export <path>` provided: writes the delimited block to that file path, prints confirmation
-- If `--export -`: writes to stdout only (pipe-friendly, no banner)
-- Default (no flag): prints banner + block to terminal as before
+**Rules:**
+- Identifies and strips RSA, EC, and general PEM private key blocks.
+- Identifies assignments to `api_key`, `secret`, `password`, `auth_token`, and similar strings.
+- Replaces matches with `[PRIVATE_KEY_REDACTED]` or `[SECRET_REDACTED]`.
+- Scrubs connection strings matching standard DBMS URIs.
 
 ---
 
-## 4. PROJECT DISCOVERY (v6 — carried forward)
-
-**Tiered resolution:** Upward traversal → Global index fallback.  
-All commands use `discover_project_root()` automatically.
-
----
-
-## 5. CLI REFERENCE (v8)
+## 4. CLI REFERENCE (v9)
 
 | Command | Flags | Description |
 |---|---|---|
 | `neuron init` | `--name --language` | Init project + PATH check |
-| `neuron watch` / `start` | `--path` | Real-time watcher + AST indexer |
+| `neuron watch` / `start` | `--path --bridge` | Watcher, AST indexer & loopback HTTP bridge |
 | `neuron context` | `--export <path\|->`  | v7 context block, optionally exported |
 | `neuron restore` | `--from` | Auto-discover + restore context |
 | `neuron status` | | Status + PATH check |
@@ -132,34 +99,6 @@ All commands use `discover_project_root()` automatically.
 | `neuron snapshot` | `--note` | Force snapshot |
 | `neuron backup` | | Manual backup |
 | `neuron export` | `--output` | Export `.tar.gz` archive |
-
----
-
-## 6. KEY FILES (v8)
-
-| File | Role |
-|---|---|
-| `src/main.rs` | CLI dispatch — now includes `Diagnose` command, `--interactive` search, `--export` context |
-| `src/utils.rs` | PATH diagnostics, `run_diagnostics`, `check_path_registration` |
-| `src/search.rs` | `search_interactive` readline loop |
-| `src/session.rs` | `print_agent_context` with delimiter tags and `--export` support |
-| `src/parser.rs` | AST symbol extractor (v7, unchanged) |
-| `src/watcher.rs` | File watcher + evolution ledger (v7, unchanged) |
-| `src/manifest.rs` | NeuronManifest + EvolutionEntry (v7, unchanged) |
-| `src/project_manager.rs` | discover_project_root (v6, unchanged) |
-
----
-
-## 7. ROADMAP
-
-| Version | Focus |
-|---|---|
-| **v6** ✅ | Production-ready core: upward path discovery, context restore, global index |
-| **v7** ✅ | Semantic indexing: AST symbols, docstring extraction, evolution ledger |
-| **v8** ✅ | Runtime operationalization: PATH diagnostics, interactive search, diagnose, export |
-| **v9** | Vector embeddings: sentence-transformer semantic search |
-| **v10** | Team sync: cloud-sync protocol for shared team memory |
-| **v11** | Web dashboard: visual memory graph, timeline, symbol browser |
 
 ---
 

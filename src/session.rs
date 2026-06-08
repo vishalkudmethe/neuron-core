@@ -266,6 +266,8 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>)
     let db_path  = utils::local_db_path(project_root);
     let git_branch = git::current_branch(project_root).unwrap_or_else(|_| "unknown".to_string());
 
+    let config = crate::config::NeuronConfig::load(project_root).await;
+
     // Symbol count (exclude raw file units)
     let unit_count: i64 = if db_path.exists() {
         let pool = search::open_local_db(&db_path).await?;
@@ -273,19 +275,50 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>)
             .fetch_one(&pool).await.unwrap_or((0,)).0
     } else { 0 };
 
-    // Top symbols per file (5 files x 3 symbols)
+    // Apply profile matrix parameters
+    let (max_files, max_syms) = if config.profile == "antigravity" {
+        (8, 6)
+    } else if config.profile == "claude" {
+        (5, 3)
+    } else { // "openai"
+        (3, 2)
+    };
+
+    // Top symbols per file
     let modules_md: String = if db_path.exists() {
         let pool = search::open_local_db(&db_path).await?;
-        let files: Vec<(String,)> = sqlx::query_as(
-            "SELECT DISTINCT file_path FROM memory_units WHERE unit_type != 'file' ORDER BY updated_at DESC LIMIT 5"
-        ).fetch_all(&pool).await.unwrap_or_default();
+        let query_files = format!(
+            "SELECT DISTINCT file_path FROM memory_units WHERE unit_type != 'file' ORDER BY updated_at DESC LIMIT {}",
+            max_files
+        );
+        let files: Vec<(String,)> = sqlx::query_as(&query_files)
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default();
         let mut out = String::new();
         for (fp,) in files {
             out.push_str(&format!("\n### Module: `{}`\n", fp));
-            let syms: Vec<(String, String, Option<String>)> = sqlx::query_as(
-                "SELECT symbol_name, symbol_type, semantic_intent FROM memory_units \
-                 WHERE file_path = ?1 AND unit_type != 'file' LIMIT 3"
-            ).bind(&fp).fetch_all(&pool).await.unwrap_or_default();
+            
+            // For openai profile, filter only Class or Module or high level symbols, or just limit count.
+            let query_syms = if config.profile == "openai" {
+                format!(
+                    "SELECT symbol_name, symbol_type, semantic_intent FROM memory_units \
+                     WHERE file_path = ?1 AND unit_type != 'file' AND symbol_type IN ('class', 'struct', 'module', 'enum') LIMIT {}",
+                    max_syms
+                )
+            } else {
+                format!(
+                    "SELECT symbol_name, symbol_type, semantic_intent FROM memory_units \
+                     WHERE file_path = ?1 AND unit_type != 'file' LIMIT {}",
+                    max_syms
+                )
+            };
+
+            let syms: Vec<(String, String, Option<String>)> = sqlx::query_as(&query_syms)
+                .bind(&fp)
+                .fetch_all(&pool)
+                .await
+                .unwrap_or_default();
             for (name, kind, intent) in syms {
                 let d = intent.filter(|s| !s.is_empty()).unwrap_or_else(|| "—".into());
                 out.push_str(&format!("*   `{}` ({}) - *Intent:* {}\n", name, kind, d));
@@ -298,11 +331,19 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>)
         "*(No symbols indexed yet — run `neuron watch` to index your codebase)*".to_string()
     };
 
-    // Evolution ledger — last 3 entries
-    let ledger_md: String = if manifest.evolution_ledger.is_empty() {
+    // Evolution ledger cap based on profile settings
+    let ledger_cap = if config.profile == "antigravity" {
+        50
+    } else if config.profile == "claude" {
+        5
+    } else {
+        0
+    };
+
+    let ledger_md: String = if manifest.evolution_ledger.is_empty() || ledger_cap == 0 {
         "*   No tweaks recorded yet — start `neuron watch` to begin tracking.".to_string()
     } else {
-        manifest.evolution_ledger.iter().rev().take(3).map(|e|
+        manifest.evolution_ledger.iter().rev().take(ledger_cap).map(|e|
             format!("*   **{}** - *Tweak:* {} -> *Reason:* {}", e.timestamp, e.tweak, e.reason)
         ).collect::<Vec<_>>().join("\n")
     };

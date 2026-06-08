@@ -131,11 +131,12 @@ pub async fn upsert_file(
         .unwrap_or("unknown")
         .to_string();
 
-    // Read file content (capped at 8 KB for indexing)
+    // Read file content (capped at 8 KB for indexing) and sanitize
     let content = tokio::fs::read_to_string(path)
         .await
         .map(|s| s.chars().take(8192).collect::<String>())
         .unwrap_or_default();
+    let sanitized_content = crate::sanitize::sanitize_content(&content);
 
     // 1. Delete old memory units for this file path (clears out old symbols)
     sqlx::query("DELETE FROM memory_units WHERE file_path = ?1")
@@ -152,16 +153,18 @@ pub async fn upsert_file(
     .bind(&file_id)
     .bind(&path_str)
     .bind(&language)
-    .bind(&content)
+    .bind(&sanitized_content)
     .bind(sha256)
     .bind(&now)
     .bind(&now)
     .execute(pool)
     .await?;
 
-    // 3. Insert each extracted symbol
+    // 3. Insert each extracted symbol (sanitized)
     for sym in symbols {
         let sym_id = Uuid::new_v4().to_string();
+        let sanitized_snippet = crate::sanitize::sanitize_content(&sym.snippet);
+        let sanitized_intent  = crate::sanitize::sanitize_content(&sym.semantic_intent);
         sqlx::query(r#"
             INSERT INTO memory_units (id, unit_type, file_path, symbol_name, symbol_type, language, content, semantic_intent, sha256, created_at, updated_at)
             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
@@ -172,8 +175,8 @@ pub async fn upsert_file(
         .bind(&sym.name)
         .bind(sym.kind.to_string())
         .bind(&sym.language)
-        .bind(&sym.snippet)
-        .bind(&sym.semantic_intent)
+        .bind(&sanitized_snippet)
+        .bind(&sanitized_intent)
         .bind(sha256)
         .bind(&now)
         .bind(&now)
