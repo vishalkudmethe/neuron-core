@@ -1,5 +1,5 @@
 # Project Neuron — Master Brain
-**Version**: v7 — Semantic Indexing & Agent Integration
+**Version**: v8 — Runtime Execution & Agent Pipeline
 **Status**: Active Development
 **Last Updated**: 2026-06-08
 
@@ -9,7 +9,7 @@
 
 Neuron is the Universal Persistent Memory Layer for AI Coding Agents. It maintains complete, portable project memory (code, conversations, decisions, architecture) that survives folder changes, PC restarts, logouts, account switches, directory switches, and machine migrations.
 
-With v7, Neuron gains **true intelligence**: AST-based semantic symbol extraction, a live evolution ledger that tracks architectural tweaks per session, and an optimised `neuron context` output that compiles a maximum-information-density prompt block for external AI agents.
+With v8, Neuron becomes **fully operational**: system PATH integration diagnostics, an interactive semantic query shell, a `neuron diagnose` safety auditor, and export-ready context blocks with agent-compatible delimiters.
 
 ---
 
@@ -17,7 +17,7 @@ With v7, Neuron gains **true intelligence**: AST-based semantic symbol extractio
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│                     NEURON v7 CORE ENGINE                      │
+│                     NEURON v8 CORE ENGINE                      │
 │                                                                │
 │  ┌──────────┐  ┌───────────────────┐  ┌────────────────────┐  │
 │  │  Watcher │  │  AST Parser       │  │  Project Manager   │  │
@@ -28,154 +28,125 @@ With v7, Neuron gains **true intelligence**: AST-based semantic symbol extractio
 │  ┌────▼─────────────────▼───────────────────────▼───────────┐  │
 │  │               Unified Ledger (SQLite FTS5)               │  │
 │  │   .neuron/index.sqlite  ←→  ~/.neuron/global_index.db    │  │
-│  │   Columns: file_path, symbol_name, symbol_type,          │  │
-│  │            semantic_intent, sha256                        │  │
 │  └──────────────────────────────────────────────────────────┘  │
-│  ┌──────────┐  ┌──────────────────┐  ┌────────────────────┐   │
-│  │   Git    │  │ Evolution Ledger │  │   Loop Guardian    │   │
-│  │(git2-rs) │  │ (manifest.json)  │  │  (loop_guard.rs)   │   │
-│  └──────────┘  └──────────────────┘  └────────────────────┘   │
+│                                                                │
+│  ┌──────────────────┐  ┌─────────────────────────────────┐    │
+│  │  Diagnostics     │  │  Interactive Query Shell        │    │
+│  │  (neuron diagnose│  │  (neuron search --interactive)  │    │
+│  │   utils.rs)      │  │   search.rs readline loop       │    │
+│  └──────────────────┘  └─────────────────────────────────┘    │
 │                                                                │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │         Context Engine (session.rs)                     │   │
-│  │  neuron context → v7 NEURON ACTIVE WORKSPACE CONTEXT    │   │
+│  │  Context Engine (session.rs)                            │   │
+│  │  neuron context --export [file]                         │   │
+│  │  Includes <!--NEURON_CONTEXT_START/END--> delimiters    │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. v7 FEATURE SPECIFICATION
+## 3. v8 FEATURE SPECIFICATION
 
-### 3.1 Incremental AST Indexer (`src/parser.rs`)
+### 3.1 PATH Diagnostics (`src/utils.rs`)
 
-**Supported languages with full tree-sitter AST walkers:**
-- **Rust** — `function_item`, `struct_item`, `enum_item`, `trait_item`; impl-block detection promotes functions to `Method`
-- **Python** — `function_definition`, `class_definition`; class-scope detection for `Method` vs `Function`
-- **JavaScript** — full tree-sitter walk, `function_declaration`, `class_declaration`, `method_definition`, `interface_declaration`
-- **TypeScript/TSX** — same as JS using `tree_sitter_typescript::language_typescript()`
+`check_path_registration(binary_path: &Path)` runs after `neuron init` and `neuron status`.
 
-**Custom regex/line parsers (no tree-sitter crate available):**
-- **Java** — class/interface/enum + method signature detection with Javadoc lookback
-- **Dart** — class + method detection with doc-comment lookback
+**Logic:**
+1. Resolve the current binary's path via `std::env::current_exe()`
+2. Read the system `PATH` environment variable and split by `;` (Windows) or `:` (Unix)
+3. Check if the binary's parent directory appears in any PATH entry
+4. If **not found** → print a highlighted, OS-specific shell snippet:
 
-**Semantic intent extraction (`extract_preceding_comments`):**  
-For every extracted symbol, the parser walks backward through source lines to collect `///`, `//`, `/** */`, and `/* */` comments immediately preceding the definition. This becomes the `semantic_intent` column in the FTS5 index.
+```
+⚠ neuron is not on your PATH.
+To fix this permanently, run:
 
-**Hash-guarded indexing:**  
-Before parsing, `process_file_change` queries the existing SHA-256 of the file. If unchanged → skip. This keeps `neuron watch` instant for unmodified files.
-
-### 3.2 v7 Database Schema (`src/search.rs`)
-
-```sql
-CREATE TABLE memory_units (
-    id              TEXT PRIMARY KEY,
-    project_id      TEXT NOT NULL DEFAULT '',
-    unit_type       TEXT NOT NULL,   -- 'file'|'function'|'method'|'struct'|'enum'|'trait'|'class'
-    file_path       TEXT,            -- Absolute path
-    symbol_name     TEXT,            -- Extracted symbol name
-    symbol_type     TEXT,            -- Mirrors unit_type for FTS querying
-    language        TEXT,
-    content         TEXT,            -- Raw snippet (≤8KB)
-    semantic_intent TEXT,            -- Extracted docstring/comment
-    sha256          TEXT,
-    created_at      TEXT NOT NULL,
-    updated_at      TEXT NOT NULL
-);
-
-CREATE VIRTUAL TABLE memory_fts USING fts5(
-    id UNINDEXED, content, symbol_name, symbol_type, file_path, semantic_intent,
-    content='memory_units', content_rowid='rowid'
-);
+  PowerShell:  $env:PATH += ";D:\AI Neuron\target\release"
+               [System.Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";D:\AI Neuron\target\release", "User")
+  CMD:         setx PATH "%PATH%;D:\AI Neuron\target\release"
+  Bash/Zsh:    export PATH="$PATH:/d/AI Neuron/target/release"
 ```
 
-**Auto-migration:** `bootstrap_local_db` detects old v5/v6 schema (presence of `path` column) and drops + recreates the tables transparently.
+### 3.2 Interactive Search Shell (`src/search.rs`)
 
-### 3.3 Evolution Ledger (`src/manifest.rs` + `src/watcher.rs`)
+`search_interactive(project_root: &Path)` — activated by `neuron search --interactive`.
 
-`NeuronManifest` now carries:
-```json
-{
-  "top_level_intent": "A universal persistent memory layer...",
-  "evolution_ledger": [
-    {
-      "timestamp": "2026-06-08 11:45 UTC",
-      "file_path": "src/parser.rs",
-      "tweak": "`src/parser.rs` — added 12 symbol(s)",
-      "reason": "Detected by neuron watch file-change pipeline"
-    }
-  ]
-}
-```
+**Behaviour:**
+- Opens the local FTS5 index
+- Prints a prompt `neuron> ` and reads lines from stdin in a loop
+- On each query: runs FTS5 MATCH, renders ranked results (symbol, type, file, semantic_intent)
+- Special commands: `:q` / `:quit` → exit loop, `:help` → print help, empty line → re-prompt
+- Uses `std::io::{stdin, stdout, Write}` — no external readline dependency
 
-The watcher appends one `EvolutionEntry` per meaningful file change. The ledger is capped at 50 entries (FIFO) to prevent unbounded growth.
+### 3.3 `neuron diagnose` (`src/utils.rs` + `src/main.rs`)
 
-### 3.4 `neuron context` v7 Output Format
+`run_diagnostics(project_root: Option<&Path>)` audits:
 
-```markdown
-# NEURON ACTIVE WORKSPACE CONTEXT
-> **Project:** [Name] | **Branch:** `[branch]` | **Memory Units:** [N]
+| Check | Green | Red |
+|---|---|---|
+| Binary on PATH | ✓ Found in PATH | ✗ Not on PATH + fix snippet |
+| Global DB | ✓ Exists + readable | ✗ Missing or locked |
+| Local DB | ✓ memory_units rows > 0 | ⚠ Empty — run `neuron watch` |
+| Loop Guardian | ✓ No active loops | ⚠ N loop events in last window |
+| Watcher processes | ✓ No zombie handles | ⚠ Cannot verify (no daemon PID) |
 
-## 🎯 TOP-LEVEL INTENT
-[manifest.top_level_intent]
+Output is a clean table using `tabled`.
 
-## 🛠️ RECENT ARCHITECTURAL TWEAKS (Last 3 Sessions)
-*   **[timestamp]** - *Tweak:* [what changed] -> *Reason:* [why]
+### 3.4 `neuron context --export` (`src/session.rs`)
 
-## 🧩 CRITICAL MODULES & SYMBOLS IN FOCUS
-### Module: `[file_path]`
-*   `[symbol_name]` ([symbol_type]) - *Intent:* [semantic_intent]
-```
+`print_agent_context(project_root, export_path: Option<&Path>)`:
 
-This block is also persisted to `.neuron/session_context.md`.
+- Wraps context block with agent-compatible HTML-style delimiters:
+  ```
+  <!-- NEURON_CONTEXT_START -->
+  ...markdown...
+  <!-- NEURON_CONTEXT_END -->
+  ```
+- If `--export <path>` provided: writes the delimited block to that file path, prints confirmation
+- If `--export -`: writes to stdout only (pipe-friendly, no banner)
+- Default (no flag): prints banner + block to terminal as before
 
 ---
 
 ## 4. PROJECT DISCOVERY (v6 — carried forward)
 
-**Tiered resolution strategy:**
-1. **Upward traversal** — Walk from CWD toward filesystem root, looking for `.neuron/` directory
-2. **Global index fallback** — Query `~/.neuron/global_index.sqlite` for most-recently-accessed project whose `.neuron/` directory still exists on disk
-
-All commands (`restore`, `context`, `search`, `status`, `snapshot`, `backup`, `export`) use `discover_project_root()` automatically.
+**Tiered resolution:** Upward traversal → Global index fallback.  
+All commands use `discover_project_root()` automatically.
 
 ---
 
-## 5. CLI REFERENCE
+## 5. CLI REFERENCE (v8)
 
-| Command | Description |
-|---|---|
-| `neuron init` | Initialize `.neuron/` in CWD, register in global index |
-| `neuron watch` / `neuron start` | Start real-time watcher + incremental AST indexer |
-| `neuron context` | Output v7 NEURON ACTIVE WORKSPACE CONTEXT block |
-| `neuron restore` | Auto-discover project, print restored context |
-| `neuron status` | Show project identity, memory unit count, loop guard state |
-| `neuron switch <name>` | Switch to another globally-indexed project |
-| `neuron list` | List all known projects from global index |
-| `neuron search <query>` | FTS5 full-text search across symbols and content |
-| `neuron snapshot` | Force-save current session to conversations/ |
-| `neuron backup` | Manually trigger backup of `.neuron/` |
-| `neuron export` | Export `.neuron/` as portable `.tar.gz` archive |
+| Command | Flags | Description |
+|---|---|---|
+| `neuron init` | `--name --language` | Init project + PATH check |
+| `neuron watch` / `start` | `--path` | Real-time watcher + AST indexer |
+| `neuron context` | `--export <path\|->`  | v7 context block, optionally exported |
+| `neuron restore` | `--from` | Auto-discover + restore context |
+| `neuron status` | | Status + PATH check |
+| `neuron diagnose` | | Full environment & DB health audit |
+| `neuron switch <name>` | | Switch project |
+| `neuron list` | `--long` | All known projects |
+| `neuron search <query>` | `--global --limit --interactive` | FTS5 search or interactive shell |
+| `neuron snapshot` | `--note` | Force snapshot |
+| `neuron backup` | | Manual backup |
+| `neuron export` | `--output` | Export `.tar.gz` archive |
 
 ---
 
-## 6. KEY FILES
+## 6. KEY FILES (v8)
 
 | File | Role |
 |---|---|
-| `src/main.rs` | CLI entry point, command dispatch |
-| `src/parser.rs` | Tree-sitter + custom AST symbol extractor with semantic intent |
-| `src/search.rs` | SQLite FTS5 schema, schema migration, upsert, search |
-| `src/watcher.rs` | File-system watcher, hash guard, evolution ledger writer |
-| `src/session.rs` | Context compilation, `neuron context` v7 formatter |
-| `src/manifest.rs` | NeuronManifest schema, EvolutionEntry, top_level_intent |
-| `src/project_manager.rs` | `discover_project_root`, init, restore, switch, global index |
-| `src/git.rs` | Branch, last commit, diff helpers |
-| `src/loop_guard.rs` | Sliding-window loop detection and termination |
-| `.neuron/index.sqlite` | Local FTS5 symbol database |
-| `.neuron/neuron_manifest.json` | Project identity + evolution ledger |
-| `.neuron/session_context.md` | Last-generated context block |
-| `~/.neuron/global_index.sqlite` | Cross-project registry |
+| `src/main.rs` | CLI dispatch — now includes `Diagnose` command, `--interactive` search, `--export` context |
+| `src/utils.rs` | PATH diagnostics, `run_diagnostics`, `check_path_registration` |
+| `src/search.rs` | `search_interactive` readline loop |
+| `src/session.rs` | `print_agent_context` with delimiter tags and `--export` support |
+| `src/parser.rs` | AST symbol extractor (v7, unchanged) |
+| `src/watcher.rs` | File watcher + evolution ledger (v7, unchanged) |
+| `src/manifest.rs` | NeuronManifest + EvolutionEntry (v7, unchanged) |
+| `src/project_manager.rs` | discover_project_root (v6, unchanged) |
 
 ---
 
@@ -184,10 +155,11 @@ All commands (`restore`, `context`, `search`, `status`, `snapshot`, `backup`, `e
 | Version | Focus |
 |---|---|
 | **v6** ✅ | Production-ready core: upward path discovery, context restore, global index |
-| **v7** ✅ | Semantic indexing: AST symbols, docstring extraction, evolution ledger, v7 context format |
-| **v8** | Vector embeddings: populate `semantic_intent` BLOB with sentence-transformer embeddings for semantic search |
-| **v9** | Team sync: `sync.rs` cloud-sync protocol for shared team memory |
-| **v10** | Web dashboard: visual memory graph, timeline, symbol browser |
+| **v7** ✅ | Semantic indexing: AST symbols, docstring extraction, evolution ledger |
+| **v8** ✅ | Runtime operationalization: PATH diagnostics, interactive search, diagnose, export |
+| **v9** | Vector embeddings: sentence-transformer semantic search |
+| **v10** | Team sync: cloud-sync protocol for shared team memory |
+| **v11** | Web dashboard: visual memory graph, timeline, symbol browser |
 
 ---
 

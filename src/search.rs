@@ -253,3 +253,115 @@ pub async fn search_memory(
 
     Ok(())
 }
+
+// ─── Interactive Search Shell ─────────────────────────────────────────────────
+
+/// Launch a persistent interactive FTS5 query shell.
+/// Type a keyword and press Enter to see ranked results.
+/// Special commands: `:q` / `:quit` to exit, `:help` for usage.
+pub async fn search_interactive(project_root: &Path) -> Result<()> {
+    use std::io::{self, BufRead, Write};
+
+    let db_path = utils::local_db_path(project_root);
+    if !db_path.exists() {
+        println!(
+            "\n{} No memory index found. Run {} first.\n",
+            "⚠".yellow(), "neuron watch".cyan()
+        );
+        return Ok(());
+    }
+
+    let pool = open_local_db(&db_path).await?;
+
+    println!("\n{}", "╔══════════════════════════════════════════════════════╗".bright_cyan());
+    println!("{}", "║   NEURON INTERACTIVE SEARCH — FTS5 Query Shell      ║".bright_cyan().bold());
+    println!("{}", "╚══════════════════════════════════════════════════════╝".bright_cyan());
+    println!("  {} Type a search term and press Enter.", "›".cyan());
+    println!("  {} Special: {} to exit, {} for help.\n", "›".cyan(), ":q".yellow(), ":help".yellow());
+
+    let stdin  = io::stdin();
+    let stdout = io::stdout();
+
+    loop {
+        // Print prompt
+        {
+            let mut out = stdout.lock();
+            write!(out, "{} ", "neuron›".bright_cyan().bold())?;
+            out.flush()?;
+        }
+
+        // Read line
+        let mut line = String::new();
+        if stdin.lock().read_line(&mut line).is_err() || line.is_empty() {
+            break;
+        }
+        let query = line.trim();
+
+        // Special commands
+        match query {
+            "" => continue,
+            ":q" | ":quit" | ":exit" => {
+                println!("{} Exiting interactive search.\n", "◎".dimmed());
+                break;
+            }
+            ":help" => {
+                println!("\n  {}", "NEURON INTERACTIVE SEARCH HELP".bright_cyan());
+                println!("  ─────────────────────────────────────────────────");
+                println!("  Type any keyword to search symbols, file paths, and semantic intents.");
+                println!("  Results are ranked by FTS5 relevance score.\n");
+                println!("  {}", "Special commands:".bold());
+                println!("    {} — exit the search shell", ":q / :quit".yellow());
+                println!("    {} — show this help", ":help".yellow());
+                println!("    {} — clear results (re-prompt)", "<Enter>".yellow());
+                println!();
+                continue;
+            }
+            _ => {}
+        }
+
+        // Run FTS5 query
+        let rows: Vec<(String, String, Option<String>, Option<String>, Option<String>)> =
+            sqlx::query_as(r#"
+                SELECT m.unit_type, m.file_path, m.symbol_name, m.semantic_intent,
+                       snippet(memory_fts, 1, '[', ']', '...', 12)
+                FROM memory_fts
+                JOIN memory_units m ON memory_fts.id = m.id
+                WHERE memory_fts MATCH ?1
+                ORDER BY rank
+                LIMIT 15
+            "#)
+            .bind(query)
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default();
+
+        if rows.is_empty() {
+            println!("  {} No results for: {}\n", "○".dimmed(), query.yellow());
+        } else {
+            println!(
+                "\n  {} {} result(s) for {}\n  {}\n",
+                "◉".bright_cyan().bold(),
+                rows.len(),
+                query.yellow().bold(),
+                "─".repeat(50).dimmed()
+            );
+            for (i, (unit_type, file_path, symbol_name, intent, snippet)) in rows.iter().enumerate() {
+                let label = match symbol_name.as_deref() {
+                    Some(s) => format!("{} ({})", s.bold().white(), unit_type.dimmed()),
+                    None    => unit_type.dimmed().to_string(),
+                };
+                println!("  {}. {}", i + 1, label);
+                println!("     {} {}", "📄".dimmed(), file_path.cyan());
+                if let Some(i) = intent.as_deref().filter(|s| !s.is_empty()) {
+                    println!("     {} {}", "💡".dimmed(), i.dimmed());
+                }
+                if let Some(snip) = snippet {
+                    println!("     {}", snip.dimmed());
+                }
+                println!();
+            }
+        }
+    }
+
+    Ok(())
+}

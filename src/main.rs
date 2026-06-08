@@ -72,7 +72,11 @@ enum Commands {
     },
 
     /// Generate rich, ready-to-paste context for AI agents
-    Context,
+    Context {
+        /// Export context to a file (or use '-' for raw stdout)
+        #[arg(short, long)]
+        export: Option<String>,
+    },
 
     /// Auto-detect nearest .neuron/ folder (upward search) and restore full context
     Restore {
@@ -97,7 +101,7 @@ enum Commands {
     /// Full-text search across project memory
     Search {
         /// Search query
-        query: String,
+        query: Option<String>,
 
         /// Search across ALL known projects (not just current)
         #[arg(short, long)]
@@ -106,6 +110,10 @@ enum Commands {
         /// Maximum results to show
         #[arg(short, long, default_value = "20")]
         limit: usize,
+
+        /// Enter persistent interactive query shell
+        #[arg(short, long)]
+        interactive: bool,
     },
 
     /// Force-save current session to conversations/ snapshot
@@ -127,6 +135,9 @@ enum Commands {
         #[arg(short, long)]
         output: Option<String>,
     },
+
+    /// Run a comprehensive environment and database health audit
+    Diagnose,
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -158,6 +169,7 @@ async fn main() -> Result<()> {
                     .unwrap_or_else(|| "unnamed".to_string())
             });
             project_manager::init_project(&cwd, &project_name, &language).await?;
+            utils::check_path_registration();
         }
 
         Commands::Watch { path } | Commands::Start { path } => {
@@ -178,9 +190,9 @@ async fn main() -> Result<()> {
             watcher::start_watcher(&neuron_root).await?;
         }
 
-        Commands::Context => {
+        Commands::Context { export } => {
             let neuron_root = project_manager::discover_project_root().await?;
-            session::print_agent_context(&neuron_root).await?;
+            session::print_agent_context(&neuron_root, export.as_deref()).await?;
         }
 
         Commands::Restore { from } => {
@@ -199,9 +211,18 @@ async fn main() -> Result<()> {
             project_manager::list_projects(long).await?;
         }
 
-        Commands::Search { query, global, limit } => {
+        Commands::Search { query, global, limit, interactive } => {
             let neuron_root = project_manager::discover_project_root().await?;
-            search::search_memory(&neuron_root, &query, global, limit).await?;
+            if interactive {
+                search::search_interactive(&neuron_root).await?;
+            } else if let Some(q) = query {
+                search::search_memory(&neuron_root, &q, global, limit).await?;
+            } else {
+                println!(
+                    "{} Please specify a search query or run with --interactive.",
+                    "⚠".yellow().bold()
+                );
+            }
         }
 
         Commands::Snapshot { note } => {
@@ -211,7 +232,10 @@ async fn main() -> Result<()> {
 
         Commands::Status => {
             match project_manager::discover_project_root().await {
-                Ok(root) => session::print_status(&root).await?,
+                Ok(root) => {
+                    session::print_status(&root).await?;
+                    utils::check_path_registration();
+                }
                 Err(_) => {
                     println!(
                         "{} No Neuron project detected in current directory or parents.",
@@ -222,6 +246,7 @@ async fn main() -> Result<()> {
                         "neuron init".cyan(),
                         "neuron restore".cyan()
                     );
+                    utils::check_path_registration();
                 }
             }
         }
@@ -235,6 +260,11 @@ async fn main() -> Result<()> {
         Commands::Export { output } => {
             let neuron_root = project_manager::discover_project_root().await?;
             sync::export_archive(&neuron_root, output.as_deref()).await?;
+        }
+
+        Commands::Diagnose => {
+            let neuron_root = project_manager::discover_project_root().await.ok();
+            utils::run_diagnostics(neuron_root.as_deref()).await?;
         }
     }
 
@@ -260,7 +290,7 @@ fn print_banner() {
     println!(
         "  {} {}  {}\n",
         "Universal Persistent Memory Layer".white().bold(),
-        "v5".bright_yellow().bold(),
+        "v8".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );
 }

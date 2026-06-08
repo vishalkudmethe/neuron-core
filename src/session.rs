@@ -260,7 +260,8 @@ pub async fn regenerate_session_context(project_root: &Path, manifest: &NeuronMa
 }
 
 /// Print the v7 NEURON ACTIVE WORKSPACE CONTEXT block — optimised for AI agent pasting.
-pub async fn print_agent_context(project_root: &Path) -> Result<()> {
+/// `export_path`: `None` = print to terminal, `Some("-")` = stdout only (pipe mode), `Some(path)` = write to file.
+pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>) -> Result<()> {
     let manifest = NeuronManifest::load(project_root).await?;
     let db_path  = utils::local_db_path(project_root);
     let git_branch = git::current_branch(project_root).unwrap_or_else(|_| "unknown".to_string());
@@ -328,11 +329,32 @@ pub async fn print_agent_context(project_root: &Path) -> Result<()> {
     let ctx_path = project_root.join(".neuron").join("session_context.md");
     fs::write(&ctx_path, &context_block).await?;
 
-    println!("\n{}", "╔══════════════════════════════════════════════════════╗".bright_cyan());
-    println!("{}",  "║      NEURON — COPY BELOW FOR YOUR AI AGENT          ║".bright_cyan().bold());
-    println!("{}\n", "╚══════════════════════════════════════════════════════╝".bright_cyan());
-    println!("{}", context_block);
-    println!("\n{}\n", "══════════════════════════════════════════════════════".bright_cyan());
+    let delimited = format!(
+        "<!-- NEURON_CONTEXT_START -->\n{}\n<!-- NEURON_CONTEXT_END -->",
+        context_block
+    );
+
+    match export_path {
+        Some("-") => {
+            println!("{}", delimited);
+        }
+        Some(path) => {
+            fs::write(path, &delimited).await?;
+            println!(
+                "\n{}  Context exported to {}\n",
+                "✓".green().bold(),
+                path.cyan()
+            );
+        }
+        None => {
+            println!("\n{}", "╔══════════════════════════════════════════════════════╗".bright_cyan());
+            println!("{}",  "║      NEURON — COPY BELOW FOR YOUR AI AGENT          ║".bright_cyan().bold());
+            println!("{}\n", "╚══════════════════════════════════════════════════════╝".bright_cyan());
+            println!("{}", context_block);
+            println!("\n{}\n", "══════════════════════════════════════════════════════".bright_cyan());
+        }
+    }
+
     Ok(())
 }
 
