@@ -87,6 +87,20 @@ enum Commands {
         /// Export context to a file (or use '-' for raw stdout)
         #[arg(short, long)]
         export: Option<String>,
+
+        /// Include an additional project alias to merge into the context block
+        #[arg(long, value_name = "ALIAS")]
+        include: Vec<String>,
+    },
+
+    /// Ingest an external project directory into the global workspace registry
+    PowerUp {
+        /// Target directory to ingest and index
+        path: String,
+
+        /// Alias name for this workspace in the global registry
+        #[arg(short, long)]
+        alias: Option<String>,
     },
 
     /// Auto-detect nearest .neuron/ folder (upward search) and restore full context
@@ -204,9 +218,19 @@ async fn main() -> Result<()> {
             watcher::start_watcher(&neuron_root).await?;
         }
 
-        Commands::Context { export } => {
+        Commands::Context { export, include } => {
             let neuron_root = project_manager::discover_project_root().await?;
-            session::print_agent_context(&neuron_root, export.as_deref()).await?;
+            session::print_agent_context(&neuron_root, export.as_deref(), &include).await?;
+        }
+
+        Commands::PowerUp { path, alias } => {
+            let target = std::path::PathBuf::from(&path);
+            let target = if target.is_absolute() {
+                target
+            } else {
+                std::env::current_dir()?.join(target)
+            };
+            project_manager::power_up(&target, alias.as_deref()).await?;
         }
 
         Commands::Restore { from } => {

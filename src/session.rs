@@ -259,9 +259,10 @@ pub async fn regenerate_session_context(project_root: &Path, manifest: &NeuronMa
     Ok(context_content)
 }
 
-/// Print the v7 NEURON ACTIVE WORKSPACE CONTEXT block — optimised for AI agent pasting.
+/// Print the NEURON ACTIVE WORKSPACE CONTEXT block — optimised for AI agent pasting.
 /// `export_path`: `None` = print to terminal, `Some("-")` = stdout only (pipe mode), `Some(path)` = write to file.
-pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>) -> Result<()> {
+/// `include`: optional list of global project aliases whose top symbols are merged into the output.
+pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>, include: &[String]) -> Result<()> {
     let manifest = NeuronManifest::load(project_root).await?;
     let db_path  = utils::local_db_path(project_root);
     let git_branch = git::current_branch(project_root).unwrap_or_else(|_| "unknown".to_string());
@@ -348,6 +349,79 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>)
         ).collect::<Vec<_>>().join("\n")
     };
 
+    // ── Cross-project synthesis ───────────────────────────────────────────────
+    let mut cross_project_md = String::new();
+    if !include.is_empty() {
+        for alias in include {
+            match crate::project_manager::resolve_alias(alias).await {
+                Err(e) => {
+                    cross_project_md.push_str(&format!(
+                        "\n### ⚠ Alias `{}` not found: {}\n", alias, e
+                    ));
+                }
+                Ok(ext_root) => {
+                    let ext_db = utils::local_db_path(&ext_root);
+                    if !ext_db.exists() {
+                        cross_project_md.push_str(&format!(
+                            "\n### `{}` — no index found (run `neuron power-up` on that workspace)\n",
+                            alias
+                        ));
+                        continue;
+                    }
+
+                    let ext_pool = search::open_local_db(&ext_db).await?;
+
+                    // Top 3 files × 3 symbols, high-level only
+                    let ext_files: Vec<(String,)> = sqlx::query_as(
+                        "SELECT DISTINCT file_path FROM memory_units \
+                         WHERE unit_type != 'file' ORDER BY updated_at DESC LIMIT 3"
+                    ).fetch_all(&ext_pool).await.unwrap_or_default();
+
+                    cross_project_md.push_str(&format!(
+                        "\n---\n## 🔗 Cross-Project: `{}`\n", alias
+                    ));
+
+                    for (fp,) in &ext_files {
+                        cross_project_md.push_str(&format!("\n### Module: `{}`\n", fp));
+                        let syms: Vec<(String, String, Option<String>)> = sqlx::query_as(
+                            "SELECT symbol_name, symbol_type, semantic_intent FROM memory_units \
+                             WHERE file_path = ?1 AND unit_type != 'file' LIMIT 3"
+                        ).bind(fp).fetch_all(&ext_pool).await.unwrap_or_default();
+
+                        for (name, kind, intent) in syms {
+                            let raw_intent = intent.unwrap_or_default();
+                            let clean = crate::sanitize::sanitize_content(&raw_intent);
+                            let clean_name = crate::sanitize::sanitize_content(&name);
+                            cross_project_md.push_str(&format!(
+                                "*   `{}` ({}) - *Intent:* {}\n", clean_name, kind,
+                                if clean.is_empty() { "—".to_string() } else { clean }
+                            ));
+                        }
+                    }
+
+                    // Last 2 ledger entries from the external manifest
+                    if let Ok(ext_manifest) = crate::manifest::NeuronManifest::load(&ext_root).await {
+                        if !ext_manifest.evolution_ledger.is_empty() {
+                            cross_project_md.push_str("\n**Recent tweaks:**\n");
+                            for e in ext_manifest.evolution_ledger.iter().rev().take(2) {
+                                let clean_tweak = crate::sanitize::sanitize_content(&e.tweak);
+                                cross_project_md.push_str(&format!(
+                                    "*   **{}** - {}\n", e.timestamp, clean_tweak
+                                ));
+                            }
+                        }
+                    }
+
+                    // Guard token cap
+                    if cross_project_md.len() > config.token_cap / 4 {
+                        cross_project_md.push_str("\n> *[Cross-project output truncated at token cap]*\n");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     let context_block = format!(
 "# NEURON ACTIVE WORKSPACE CONTEXT
 > **Project:** {} | **Branch:** `{}` | **Memory Units:** {}
@@ -359,11 +433,12 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>)
 {}
 
 ## 🧩 CRITICAL MODULES & SYMBOLS IN FOCUS
-{}",
+{}{}",
         manifest.name, git_branch, unit_count,
         manifest.top_level_intent,
         ledger_md,
         modules_md,
+        cross_project_md,
     );
 
     // Persist
