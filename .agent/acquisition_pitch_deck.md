@@ -74,6 +74,8 @@ Neuron acts as the **standardized local memory ledger** for AI agents. By execut
 | **IDE Ecosystems** | **Anysphere (Cursor)** | Replaces their closed-source indexing daemon with a faster, standardized Rust engine, reducing cloud indexing overhead. |
 | **IDE Ecosystems** | **Microsoft (GitHub Copilot)** | Integrates local FTS5 indexing directly into the VS Code task runner, offering offline Copilot reasoning. |
 | **Frontier AI Labs** | **Anthropic (Claude Code)** | Provides Claude's terminal agent with a pre-configured local tool client to instantly run multi-file updates. |
+| **Frontier AI Labs** | **Google AI (Gemini / IDX)** | Powers Project IDX (Google's web IDE) with an instant local/remote indexing daemon. Feeds structured codebase maps into Gemini's 2M context window to prevent high-token hallucinations. |
+| **Frontier AI Labs** | **xAI (Grok / Grok Code)** | Grok Code requires a high-performance, local-first context engine. Neuron's raw Rust speed and open-source alignment match xAI's developer culture. |
 | **AI Agent Startups** | **Cognition AI (Devin)** | Gives autonomous agents a standardized memory interface to index local workspaces without relying on heavy cloud indexing. |
 | **Venture Capital** | **Developer-focused VCs** | Validates the "Local-First AI" thesis: developers will demand local data control and privacy-preserving AI context tools. |
 
