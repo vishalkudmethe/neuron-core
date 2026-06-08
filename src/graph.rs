@@ -8,6 +8,7 @@ use chrono::{DateTime, Duration, Utc};
 use colored::Colorize;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use crate::{intent, search, utils};
 
@@ -27,8 +28,12 @@ struct GraphNode {
 
 async fn open_global_db_pool() -> Result<sqlx::SqlitePool> {
     let db_path = utils::global_db_path()?;
-    let db_url = format!("sqlite://{}", db_path.display());
-    sqlx::SqlitePool::connect(&db_url).await.context("Failed to open global database")
+    let opts = sqlx::sqlite::SqliteConnectOptions::from_str(&format!(
+        "sqlite://{}", db_path.display()
+    ))?
+    .create_if_missing(false)
+    .busy_timeout(std::time::Duration::from_millis(1500));
+    sqlx::SqlitePool::connect_with(opts).await.context("Failed to open global database")
 }
 
 // ─── Graph Drawing ────────────────────────────────────────────────────────────

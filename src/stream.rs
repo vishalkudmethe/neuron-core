@@ -3,7 +3,7 @@
 
 use anyhow::Result;
 use std::path::{Path, PathBuf};
-use crate::{config::NeuronConfig, intent, manifest::NeuronManifest, sanitize, search, utils};
+use crate::{config::NeuronConfig, dedup, intent, manifest::NeuronManifest, sanitize, search, utils};
 
 pub async fn compile_stream_context(project_root: &Path) -> Result<String> {
     let manifest = NeuronManifest::load(project_root).await?;
@@ -146,6 +146,9 @@ pub async fn compile_stream_context(project_root: &Path) -> Result<String> {
         let truncate_len = char_cap.saturating_sub(warning.len());
         out = format!("{}{}", &out[..truncate_len], warning);
     }
+
+    // ── 5. AST deduplication pass (v14) ──────────────────────────────────────
+    let out = dedup::deduplicate_context(&out);
 
     Ok(out)
 }

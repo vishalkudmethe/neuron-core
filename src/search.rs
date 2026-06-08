@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS loop_events (
 pub async fn open_local_db(db_path: &Path) -> Result<SqlitePool> {
     let opts = SqliteConnectOptions::from_str(&format!("sqlite://{}", db_path.display()))?
         .create_if_missing(true)
+        .busy_timeout(std::time::Duration::from_millis(1500))
         .foreign_keys(true);
     let pool = SqlitePool::connect_with(opts)
         .await

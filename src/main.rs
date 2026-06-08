@@ -1,8 +1,10 @@
-//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v11)
+//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v14)
 //! CLI entrypoint. All commands are dispatched from here.
 
 mod analyzer;
 mod bridge;
+mod cleanup;
+mod dedup;
 mod config;
 mod conversation;
 mod dependency;
@@ -221,6 +223,9 @@ enum Commands {
         #[arg(short, long)]
         trace: Option<String>,
     },
+
+    /// Run storage maintenance: VACUUM/ANALYZE databases, rotate logs, and evict stale locks
+    Cleanup,
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -398,6 +403,11 @@ async fn main() -> Result<()> {
                 graph::render_topology_graph().await?;
             }
         }
+
+        Commands::Cleanup => {
+            let neuron_root = project_manager::discover_project_root().await?;
+            cleanup::run_maintenance(&neuron_root).await?;
+        }
     }
 
     Ok(())
@@ -422,7 +432,7 @@ fn print_banner() {
     println!(
         "  {} {}  {}\n",
         "Universal Persistent Memory Layer".white().bold(),
-        "v13".bright_yellow().bold(),
+        "v14".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );
 }

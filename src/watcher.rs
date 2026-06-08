@@ -73,8 +73,59 @@ impl Debouncer {
 
 // ─── Entry Point ─────────────────────────────────────────────────────────────
 
+fn is_process_running(pid: u32) -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(output) = std::process::Command::new("tasklist")
+            .args(&["/FI", &format!("PID eq {}", pid)])
+            .output()
+        {
+            let out_str = String::from_utf8_lossy(&output.stdout);
+            return out_str.contains(&pid.to_string());
+        }
+        false
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let output = std::process::Command::new("kill")
+            .args(&["-0", &pid.to_string()])
+            .status();
+        match output {
+            Ok(status) => status.success(),
+            Err(_) => false,
+        }
+    }
+}
+
+struct WatcherLockGuard {
+    lock_path: PathBuf,
+}
+
+impl Drop for WatcherLockGuard {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.lock_path);
+    }
+}
+
 /// Start the watcher daemon. Blocks until Ctrl-C or a fatal error.
 pub async fn start_watcher(project_root: &Path) -> Result<()> {
+    let lock_path = project_root.join(".neuron").join("watcher.lock");
+    if lock_path.exists() {
+        if let Ok(pid_str) = tokio::fs::read_to_string(&lock_path).await {
+            if let Ok(pid) = pid_str.trim().parse::<u32>() {
+                if is_process_running(pid) {
+                    anyhow::bail!("Watcher daemon is already running under PID: {}", pid);
+                } else {
+                    warn!("Stale watcher lock found for dead PID {}. Evicting lock.", pid);
+                    let _ = tokio::fs::remove_file(&lock_path).await;
+                }
+            }
+        }
+    }
+    let current_pid = std::process::id();
+    tokio::fs::write(&lock_path, current_pid.to_string()).await?;
+    let _lock_guard = WatcherLockGuard { lock_path };
+
     let manifest = NeuronManifest::load(project_root)
         .await
         .context("Cannot start watcher: manifest not found")?;

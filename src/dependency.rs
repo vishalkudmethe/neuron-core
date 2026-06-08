@@ -40,6 +40,7 @@ async fn open_global_db() -> Result<SqlitePool> {
         "sqlite://{}", db_path.display()
     ))?
     .create_if_missing(true)
+    .busy_timeout(std::time::Duration::from_millis(1500))
     .foreign_keys(true);
 
     let pool = SqlitePool::connect_with(opts).await
