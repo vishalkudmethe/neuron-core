@@ -61,8 +61,33 @@ pub async fn start_bridge(project_root: &Path) -> Result<()> {
                                 }
 
                                 // Basic routing
+                                let is_get_stream = request.starts_with("GET /v1/context/stream");
                                 let is_get_context = request.starts_with("GET /v1/context");
-                                if is_get_context {
+                                if is_get_stream {
+                                    match crate::stream::compile_stream_context(&project_root).await {
+                                        Ok(context) => {
+                                            let response_body = format!(
+                                                "<!-- NEURON_STREAM_START -->\n{}\n<!-- NEURON_STREAM_END -->",
+                                                context
+                                            );
+                                            let response = format!(
+                                                "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                                                response_body.len(),
+                                                response_body
+                                            );
+                                            let _ = socket.write_all(response.as_bytes()).await;
+                                        }
+                                        Err(e) => {
+                                            let err_msg = format!("Internal Server Error: {}\n", e);
+                                            let response = format!(
+                                                "HTTP/1.1 500 Internal Server Error\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                                                err_msg.len(),
+                                                err_msg
+                                            );
+                                            let _ = socket.write_all(response.as_bytes()).await;
+                                        }
+                                    }
+                                } else if is_get_context {
                                     let manifest_res = crate::manifest::NeuronManifest::load(&project_root).await;
                                     match manifest_res {
                                         Ok(manifest) => {

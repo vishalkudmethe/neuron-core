@@ -7,6 +7,7 @@ mod config;
 mod conversation;
 mod dependency;
 mod git;
+mod intent;
 mod loop_guard;
 mod manifest;
 mod parser;
@@ -14,6 +15,7 @@ mod project_manager;
 mod sanitize;
 mod search;
 mod session;
+mod stream;
 mod sync;
 mod utils;
 mod watcher;
@@ -192,6 +194,25 @@ enum Commands {
         #[arg(short, long)]
         parent: String,
     },
+
+    /// Manage the active developer intent session
+    Session {
+        /// Start background intent tracking and focus score polling loop
+        #[arg(short, long)]
+        track: bool,
+    },
+
+    /// Telemetry inflow: log a compilation or command error to flag the current context stream as failed
+    #[command(name = "log-error")]
+    LogError {
+        /// Command that failed (e.g. "cargo build")
+        #[arg(short, long)]
+        cmd: String,
+
+        /// Error stderr or compiler failure output
+        #[arg(short, long)]
+        err: String,
+    },
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -347,6 +368,20 @@ async fn main() -> Result<()> {
         Commands::Analyze { parent } => {
             analyzer::analyze_parent(&parent).await?;
         }
+
+        Commands::Session { track } => {
+            if track {
+                let neuron_root = project_manager::discover_project_root().await?;
+                intent::start_tracker(&neuron_root).await?;
+            } else {
+                println!("{} Please use --track to start the background session focus score poller.", "⚠".yellow().bold());
+            }
+        }
+
+        Commands::LogError { cmd, err } => {
+            let neuron_root = project_manager::discover_project_root().await?;
+            intent::write_error_log(&neuron_root, &cmd, &err).await?;
+        }
     }
 
     Ok(())
@@ -371,7 +406,7 @@ fn print_banner() {
     println!(
         "  {} {}  {}\n",
         "Universal Persistent Memory Layer".white().bold(),
-        "v11".bright_yellow().bold(),
+        "v12".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );
 }
