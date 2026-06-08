@@ -3,11 +3,16 @@
   "name": "neuron",
   "version": "0.5.0",
   "root_path": "d:\\AI Neuron",
-  "neuron_path": "d:\\AI Neuron\\.neuron",
   "language": "rust",
   "created_at": "2026-06-08T00:00:00Z",
-  "last_accessed": "2026-06-08T00:00:00Z",
-  "tags": ["ai", "memory", "rust", "cli", "multi-project"],
+  "last_accessed": "2026-06-08T05:21:10.588781100Z",
+  "tags": [
+    "ai",
+    "memory",
+    "rust",
+    "cli",
+    "multi-project"
+  ],
   "config": {
     "watcher_debounce_ms": 300,
     "loop_guard_window_sec": 60,
