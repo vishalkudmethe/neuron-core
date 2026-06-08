@@ -369,3 +369,42 @@ pub async fn search_interactive(project_root: &Path) -> Result<()> {
 
     Ok(())
 }
+
+pub async fn search_symbols_string(project_root: &Path, query: &str) -> Result<String> {
+    let db_path = utils::local_db_path(project_root);
+    if !db_path.exists() {
+        return Ok("No local memory index found.".to_string());
+    }
+    let pool = open_local_db(&db_path).await?;
+    let rows: Vec<(String, String, Option<String>, Option<String>)> = sqlx::query_as(r#"
+        SELECT m.unit_type, m.file_path, m.symbol_name, snippet(memory_fts, 1, '[', ']', '...', 10)
+        FROM memory_fts
+        JOIN memory_units m ON memory_fts.id = m.id
+        WHERE memory_fts MATCH ?1
+        ORDER BY rank
+        LIMIT 20
+    "#)
+    .bind(query)
+    .fetch_all(&pool)
+    .await?;
+
+    if rows.is_empty() {
+        return Ok(format!("No search results found for query: {}", query));
+    }
+
+    let mut out = String::new();
+    out.push_str(&format!("Search results for query: {}\n\n", query));
+    for (i, (unit_type, file_path, symbol_name, snippet)) in rows.iter().enumerate() {
+        let label = match symbol_name.as_deref() {
+            Some(s) => format!("{} ({})", s, unit_type),
+            None    => unit_type.clone(),
+        };
+        out.push_str(&format!("{}. {}\n", i + 1, label));
+        out.push_str(&format!("   File: {}\n", file_path));
+        if let Some(snip) = snippet {
+            out.push_str(&format!("   Snippet: {}\n", snip));
+        }
+        out.push_str("\n");
+    }
+    Ok(out)
+}

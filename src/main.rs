@@ -10,6 +10,7 @@ mod conversation;
 mod dependency;
 mod git;
 mod graph;
+mod mcp;
 mod intent;
 mod loop_guard;
 mod manifest;
@@ -226,6 +227,10 @@ enum Commands {
 
     /// Run storage maintenance: VACUUM/ANALYZE databases, rotate logs, and evict stale locks
     Cleanup,
+
+    /// Start native Model Context Protocol (MCP) server over stdin/stdout
+    #[command(name = "start-mcp")]
+    StartMcp,
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -240,13 +245,17 @@ async fn main() -> Result<()> {
         1 => "neuron=debug",
         _ => "neuron=trace,debug",
     };
-    fmt()
+    let subscriber = fmt()
         .with_env_filter(EnvFilter::new(filter))
         .with_target(false)
-        .compact()
-        .init();
+        .compact();
 
-    print_banner();
+    if matches!(cli.command, Commands::StartMcp) {
+        subscriber.with_writer(std::io::stderr).init();
+    } else {
+        subscriber.init();
+        print_banner();
+    }
 
     match cli.command {
         Commands::Init { name, language } => {
@@ -407,6 +416,11 @@ async fn main() -> Result<()> {
         Commands::Cleanup => {
             let neuron_root = project_manager::discover_project_root().await?;
             cleanup::run_maintenance(&neuron_root).await?;
+        }
+
+        Commands::StartMcp => {
+            let neuron_root = project_manager::discover_project_root().await?;
+            mcp::run_mcp_server(&neuron_root).await?;
         }
     }
 

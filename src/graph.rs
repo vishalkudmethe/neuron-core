@@ -318,3 +318,120 @@ pub async fn trace_symbol_cascade(symbol_name: &str) -> Result<()> {
 
     Ok(())
 }
+
+pub async fn get_trace_symbol_string(symbol_name: &str) -> Result<String> {
+    let pool = open_global_db_pool().await?;
+
+    // 1. Locate the symbol in signature snapshots to see where it was declared
+    let snapshot: Option<(String, String, String, String)> = sqlx::query_as(
+        "SELECT project_id, symbol_type, signature_hash, last_seen_at FROM signature_snapshots \
+         WHERE symbol_name = ?1 LIMIT 1"
+    )
+    .bind(symbol_name)
+    .fetch_optional(&pool)
+    .await?;
+
+    let (src_project_id, sym_type, current_hash, mutated_at_str) = match snapshot {
+        Some(s) => s,
+        None => {
+            return Ok(format!(
+                "Symbol '{}' is not registered in any signature snapshots. Run `neuron analyze` on the parent workspace first.",
+                symbol_name
+            ));
+        }
+    };
+
+    // Find parent project details
+    let (parent_name, parent_root_str): (String, String) = sqlx::query_as(
+        "SELECT name, root_path FROM projects WHERE id = ?1 LIMIT 1"
+    )
+    .bind(&src_project_id)
+    .fetch_one(&pool)
+    .await?;
+
+    let mut out = String::new();
+    out.push_str("⚡ CASCADING MUTATION TRACER\n");
+    out.push_str(&format!("  Symbol: {} ({})\n", symbol_name, sym_type));
+    out.push_str(&format!("  Source: {} ({})\n", parent_name, parent_root_str));
+    out.push_str(&format!("  Current Hash: {}\n", current_hash));
+    out.push_str(&format!("  Last Changed: {}\n", mutated_at_str));
+    out.push_str("\nTracing usages across consumer workspaces...\n\n");
+
+    // 2. Fetch children of this parent project
+    let children: Vec<(String, String, String)> = sqlx::query_as(
+        "SELECT p.id, p.name, p.root_path FROM workspace_dependencies d \
+         JOIN projects p ON p.id = d.child_id \
+         WHERE d.parent_id = ?1"
+    )
+    .bind(&src_project_id)
+    .fetch_all(&pool)
+    .await?;
+
+    if children.is_empty() {
+        out.push_str(&format!("  No downstream consumer projects registered for '{}'.\n", parent_name));
+        return Ok(out);
+    }
+
+    let mutated_at = DateTime::parse_from_rfc3339(&mutated_at_str)
+        .map(|dt| dt.with_timezone(&Utc))
+        .unwrap_or_else(|_| Utc::now());
+
+    let mut at_least_one_hit = false;
+
+    // 3. Scan children for usages
+    for (_child_id, child_name, child_root_str) in children {
+        let child_root = Path::new(&child_root_str);
+        let child_db = utils::local_db_path(child_root);
+        if !child_db.exists() {
+            continue;
+        }
+
+        let child_pool = search::open_local_db(&child_db).await?;
+        let hits: Vec<(String,)> = sqlx::query_as(
+            "SELECT DISTINCT file_path FROM memory_units WHERE content LIKE ?1 AND unit_type = 'file'"
+        )
+        .bind(format!("%{}%", symbol_name))
+        .fetch_all(&child_pool)
+        .await
+        .unwrap_or_default();
+
+        if hits.is_empty() {
+            continue;
+        }
+
+        at_least_one_hit = true;
+        out.push_str(&format!("  Consumer Workspace `{}`:\n", child_name));
+
+        for (file_path,) in hits {
+            let full_file_path = PathBuf::from(&file_path);
+            let rel_path = full_file_path.strip_prefix(child_root).unwrap_or(&full_file_path).to_string_lossy().to_string();
+
+            // Compare file modified time against mutation time
+            let mtime = match tokio::fs::metadata(&full_file_path).await {
+                Ok(m) => match m.modified() {
+                    Ok(t) => DateTime::<Utc>::from(t),
+                    Err(_) => Utc::now() - Duration::hours(24),
+                },
+                Err(_) => Utc::now() - Duration::hours(24),
+            };
+
+            if mtime < mutated_at {
+                out.push_str(&format!(
+                    "    ├── {}  [⚠️ MUTATED] (File out-of-date, modified before parent signature change)\n",
+                    rel_path
+                ));
+            } else {
+                out.push_str(&format!(
+                    "    ├── {}  [✓ Synced] (Modified after parent signature change)\n",
+                    rel_path
+                ));
+            }
+        }
+    }
+
+    if !at_least_one_hit {
+        out.push_str(&format!("  No downstream usage of '{}' detected in children.\n", symbol_name));
+    }
+
+    Ok(out)
+}

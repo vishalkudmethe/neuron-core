@@ -1,4 +1,4 @@
-# Neuron v15 - Windows Global Installer
+# Neuron v16 - Windows Global Installer
 # Run from repository root: .\install.ps1
 
 $ErrorActionPreference = "Stop"
@@ -47,7 +47,7 @@ $VersionOutput = & $InstallPath "--version" 2>&1
 Write-Host "  [x] $VersionOutput" -ForegroundColor Green
 Write-Host ""
 Write-Host "  ================================================" -ForegroundColor Cyan
-Write-Host "  Neuron v15 successfully installed and operational." -ForegroundColor White
+Write-Host "  Neuron v16 successfully installed and operational." -ForegroundColor White
 Write-Host "  Run 'neuron --help' from any directory." -ForegroundColor DarkCyan
 Write-Host "  ================================================" -ForegroundColor Cyan
 Write-Host ""

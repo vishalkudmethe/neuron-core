@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Neuron v15 — Unix Global Installer
+# Neuron v16 — Unix Global Installer
 # Run from repository root: bash install.sh
 
 set -e
@@ -52,7 +52,7 @@ VERSION_OUT=$("$INSTALL_PATH" --version 2>&1)
 echo "  [✓] $VERSION_OUT"
 echo ""
 echo "  ================================================"
-echo "  Neuron v15 successfully installed and operational."
+echo "  Neuron v16 successfully installed and operational."
 echo "  Run 'neuron --help' from any directory."
 echo "  ================================================"
 echo ""

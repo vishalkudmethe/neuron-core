@@ -260,10 +260,8 @@ pub async fn regenerate_session_context(project_root: &Path, manifest: &NeuronMa
     Ok(context_content)
 }
 
-/// Print the NEURON ACTIVE WORKSPACE CONTEXT block — optimised for AI agent pasting.
-/// `export_path`: `None` = print to terminal, `Some("-")` = stdout only (pipe mode), `Some(path)` = write to file.
-/// `include`: optional list of global project aliases whose top symbols are merged into the output.
-pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>, include: &[String]) -> Result<()> {
+/// Get the NEURON ACTIVE WORKSPACE CONTEXT block as a String.
+pub async fn get_agent_context_string(project_root: &Path, include: &[String]) -> Result<String> {
     let manifest = NeuronManifest::load(project_root).await?;
     let db_path  = utils::local_db_path(project_root);
     let git_branch = git::current_branch(project_root).unwrap_or_else(|_| "unknown".to_string());
@@ -489,6 +487,14 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>,
         parent_mutation_md,
     );
 
+    Ok(context_block)
+}
+
+/// Print the NEURON ACTIVE WORKSPACE CONTEXT block — optimised for AI agent pasting.
+/// `export_path`: `None` = print to terminal, `Some("-")` = stdout only (pipe mode), `Some(path)` = write to file.
+/// `include`: optional list of global project aliases whose top symbols are merged into the output.
+pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>, include: &[String]) -> Result<()> {
+    let context_block = get_agent_context_string(project_root, include).await?;
 
     // Persist
     let ctx_path = project_root.join(".neuron").join("session_context.md");
