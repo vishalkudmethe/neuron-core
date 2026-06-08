@@ -49,9 +49,19 @@ struct GetImpactGraphArgs {
     symbol: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct GetSymbolInfoArgs {
+    name: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GetFileContentArgs {
+    path: String,
+}
+
 pub async fn run_mcp_server(project_root: &Path) -> Result<()> {
     eprintln!("  [MCP] Starting Model Context Protocol (MCP) server over stdio...");
-    eprintln!("  [MCP] Exposing tools: get_project_context, search_symbols, get_impact_graph");
+    eprintln!("  [MCP] Exposing tools: get_project_context, search_symbols, get_impact_graph, get_symbol_info, get_file_content");
 
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin).lines();
@@ -149,6 +159,34 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                                 }
                             },
                             "required": ["symbol"]
+                        }
+                    },
+                    {
+                        "name": "get_symbol_info",
+                        "description": "Retrieve detailed definition snippet, language, and semantic intent for a specific structural symbol (struct, function, class).",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Name of the symbol to retrieve"
+                                }
+                            },
+                            "required": ["name"]
+                        }
+                    },
+                    {
+                        "name": "get_file_content",
+                        "description": "Retrieve the sanitized source content of a specific file by path or partial path. Returns up to 16 KB. Use this to inspect a file before editing.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "path": {
+                                    "type": "string",
+                                    "description": "File path or partial path to look up (e.g. 'src/mcp.rs' or 'mcp')"
+                                }
+                            },
+                            "required": ["path"]
                         }
                     }
                 ]
@@ -265,6 +303,76 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                             })
                         }
                         Err(e) => Some(error_response(req.id.clone(), -32603, format!("Impact trace failed: {}", e))),
+                    }
+                }
+                "get_symbol_info" => {
+                    let args_val = match call_params.arguments {
+                        Some(a) => a,
+                        None => {
+                            return Some(error_response(req.id.clone(), -32602, "Missing arguments".to_string()));
+                        }
+                    };
+                    let args: GetSymbolInfoArgs = match serde_json::from_value(args_val) {
+                        Ok(a) => a,
+                        Err(e) => {
+                            return Some(error_response(req.id.clone(), -32602, format!("Invalid arguments: {}", e)));
+                        }
+                    };
+
+                    match search::get_symbol_info_string(project_root, &args.name).await {
+                        Ok(res_str) => {
+                            let sanitized = sanitize::sanitize_content(&res_str);
+                            let content = serde_json::json!({
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": sanitized
+                                    }
+                                ]
+                            });
+                            Some(JsonRpcResponse {
+                                jsonrpc: "2.0".to_string(),
+                                id: req.id.clone(),
+                                result: Some(content),
+                                error: None,
+                            })
+                        }
+                        Err(e) => Some(error_response(req.id.clone(), -32603, format!("Symbol lookup failed: {}", e))),
+                    }
+                }
+                "get_file_content" => {
+                    let args_val = match call_params.arguments {
+                        Some(a) => a,
+                        None => {
+                            return Some(error_response(req.id.clone(), -32602, "Missing arguments".to_string()));
+                        }
+                    };
+                    let args: GetFileContentArgs = match serde_json::from_value(args_val) {
+                        Ok(a) => a,
+                        Err(e) => {
+                            return Some(error_response(req.id.clone(), -32602, format!("Invalid arguments: {}", e)));
+                        }
+                    };
+
+                    match search::get_file_content_string(project_root, &args.path).await {
+                        Ok(res_str) => {
+                            let sanitized = sanitize::sanitize_content(&res_str);
+                            let content = serde_json::json!({
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": sanitized
+                                    }
+                                ]
+                            });
+                            Some(JsonRpcResponse {
+                                jsonrpc: "2.0".to_string(),
+                                id: req.id.clone(),
+                                result: Some(content),
+                                error: None,
+                            })
+                        }
+                        Err(e) => Some(error_response(req.id.clone(), -32603, format!("File content lookup failed: {}", e))),
                     }
                 }
                 _ => Some(error_response(req.id.clone(), -32601, format!("Tool not found: {}", call_params.name))),

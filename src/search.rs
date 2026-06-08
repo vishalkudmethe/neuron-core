@@ -408,3 +408,85 @@ pub async fn search_symbols_string(project_root: &Path, query: &str) -> Result<S
     }
     Ok(out)
 }
+
+pub async fn get_symbol_info_string(project_root: &Path, symbol_name: &str) -> Result<String> {
+    let db_path = utils::local_db_path(project_root);
+    if !db_path.exists() {
+        return Ok("No local memory index found.".to_string());
+    }
+    let pool = bootstrap_local_db(project_root).await?;
+    let rows: Vec<(String, String, String, Option<String>, Option<String>)> = sqlx::query_as(r#"
+        SELECT unit_type, file_path, content, semantic_intent, language
+        FROM memory_units
+        WHERE symbol_name = ?1
+        LIMIT 5
+    "#)
+    .bind(symbol_name)
+    .fetch_all(&pool)
+    .await?;
+
+    if rows.is_empty() {
+        return Ok(format!("Symbol '{}' not found in workspace database.", symbol_name));
+    }
+
+    let mut out = String::new();
+    out.push_str(&format!("Information for symbol: {}\n\n", symbol_name));
+    for (i, (unit_type, file_path, content, semantic_intent, language)) in rows.iter().enumerate() {
+        out.push_str(&format!("Match #{}:\n", i + 1));
+        out.push_str(&format!("  Type: {}\n", unit_type));
+        out.push_str(&format!("  File: {}\n", file_path));
+        out.push_str(&format!("  Language: {}\n", language.as_deref().unwrap_or("unknown")));
+        if let Some(intent) = semantic_intent.as_deref().filter(|s| !s.is_empty()) {
+            out.push_str(&format!("  Semantic Intent: {}\n", intent));
+        }
+        out.push_str("  Definition Snippet:\n");
+        out.push_str("```\n");
+        out.push_str(content);
+        out.push_str("\n```\n\n");
+    }
+    Ok(out)
+}
+
+/// Retrieve the sanitized indexed content of a file by its path (or path substring).
+/// Returns up to 16 KB — enough for an agent to understand structure
+/// without blowing token budgets.
+pub async fn get_file_content_string(project_root: &Path, file_path_query: &str) -> Result<String> {
+    let db_path = utils::local_db_path(project_root);
+    if !db_path.exists() {
+        return Ok("No local memory index found.".to_string());
+    }
+    let pool = bootstrap_local_db(project_root).await?;
+
+    let row: Option<(String, String, Option<String>)> = sqlx::query_as(r#"
+        SELECT file_path, content, language
+        FROM memory_units
+        WHERE unit_type = 'file'
+          AND file_path LIKE ?1
+        ORDER BY updated_at DESC
+        LIMIT 1
+    "#)
+    .bind(format!("%{}%", file_path_query))
+    .fetch_optional(&pool)
+    .await?;
+
+    match row {
+        None => Ok(format!(
+            "File matching '{}' not found in workspace index. Has `neuron watch` indexed this path?",
+            file_path_query
+        )),
+        Some((file_path, content, language)) => {
+            let truncated: String = content.chars().take(16384).collect();
+            let was_truncated = content.len() > 16384;
+            let mut out = String::new();
+            out.push_str(&format!("File: {}\n", file_path));
+            out.push_str(&format!("Language: {}\n", language.as_deref().unwrap_or("unknown")));
+            if was_truncated {
+                out.push_str("Note: Content truncated to 16 KB for token efficiency.\n");
+            }
+            out.push_str("\n```\n");
+            out.push_str(&truncated);
+            out.push_str("\n```\n");
+            Ok(out)
+        }
+    }
+}
