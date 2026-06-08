@@ -1,5 +1,5 @@
 # Project Neuron — Master Brain
-**Version**: v10 — Universal Workspace Ingestion & Cross-Project Inflow
+**Version**: v11 — Cross-Project Intelligence & Interface Propagator
 **Status**: Active Development
 **Last Updated**: 2026-06-08
 
@@ -9,7 +9,7 @@
 
 Neuron is the Universal Persistent Memory Layer for AI Coding Agents. It maintains complete, portable project memory (code, conversations, decisions, architecture) that survives folder changes, PC restarts, logouts, account switches, directory switches, and machine migrations.
 
-With v10, Neuron becomes a **cross-project domination engine**: it can ingest any external workspace directory into its global registry (`neuron power-up`), switch fluidly between indexed projects, and compile unified, multi-repository AI prompt blocks on demand (`neuron context --include <alias>`).
+With v11, Neuron evolves from a parallel indexer into an **active cross-project structural dependency engine**. It tracks directional dependency arcs between workspaces, computes structural signature hashes of public symbols, detects breaking-change mutations in parent repositories, and automatically injects parent interface mutation warnings into any child project's AI context block — no `--include` flag required.
 
 ---
 
@@ -17,99 +17,128 @@ With v10, Neuron becomes a **cross-project domination engine**: it can ingest an
 
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
-│                       NEURON v10 CORE ENGINE                          │
+│                       NEURON v11 CORE ENGINE                          │
 │                                                                       │
 │  ┌──────────┐  ┌───────────────────┐  ┌─────────────────────────┐    │
-│  │  Watcher │  │  AST Parser       │  │  Project Manager v10    │    │
-│  │ (notify) │  │ (tree-sitter +    │  │  power_up / resolve_alias│   │
-│  │          │  │  custom Java/Dart)│  │  detect_primary_language │   │
+│  │  Watcher │  │  AST Parser +     │  │  Project Manager v10    │    │
+│  │ (notify) │  │  Signature Hasher │  │  power_up / register    │    │
+│  │          │  │  (analyzer.rs)    │  │  resolve_alias          │    │
 │  └────┬─────┘  └────────┬──────────┘  └────────────┬────────────┘    │
 │       │                 │                           │                 │
 │  ┌────▼─────────────────▼───────────────────────────▼──────────────┐  │
 │  │                  Unified Ledger (SQLite FTS5)                   │  │
 │  │   .neuron/index.sqlite  ←→  ~/.neuron/global_index.sqlite       │  │
+│  │   + workspace_dependencies arc table                            │  │
+│  │   + signature_snapshots mutation log                            │  │
 │  └────────────────────────────────────────────────────────────────┘  │
 │                                                                       │
-│  ┌──────────────────────┐  ┌─────────────────────────────────────┐   │
-│  │  Diagnostics         │  │  Privacy Guard & Data Stripping     │   │
-│  │  (neuron diagnose)   │  │  (sanitize.rs — runs pre-upsert)    │   │
-│  └──────────────────────┘  └─────────────────────────────────────┘   │
-│                                                                       │
 │  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │  HTTP Integration Bridge (bridge.rs)                            │  │
-│  │  GET /v1/context → Bearer token auth → delimited markdown out   │  │
+│  │  Dependency Topology (dependency.rs)                            │  │
+│  │  neuron link-deps --parent <alias> --child <alias>              │  │
+│  │  workspace_dependencies: (parent_id → child_id) arcs           │  │
 │  └─────────────────────────────────────────────────────────────────┘  │
 │                                                                       │
 │  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │  Token Profile Budgeting (config.rs / Neuron.toml)             │  │
-│  │  antigravity: 250k / claude: 100k / openai: 30k               │  │
+│  │  Signature Mutation Engine (analyzer.rs)                        │  │
+│  │  Computes SHA-256 of symbol signature on each index pass        │  │
+│  │  Detects shape changes → marks child files as High-Impact       │  │
+│  │  neuron analyze --parent <alias>                                │  │
 │  └─────────────────────────────────────────────────────────────────┘  │
 │                                                                       │
 │  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │  Cross-Project Context Synthesis (session.rs)                   │  │
-│  │  neuron context --include <alias> → multi-DB secondary pools    │  │
+│  │  Cascading Intelligence Injection (session.rs)                  │  │
+│  │  Auto-detects parent mutations in last 48h on `neuron context`  │  │
+│  │  Injects ⚠️ Parent Interface Mutations block automatically      │  │
 │  └─────────────────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. v10 FEATURE SPECIFICATION
+## 3. v11 FEATURE SPECIFICATION
 
-### 3.1 Universal Power-Up Pipeline (`src/project_manager.rs`)
+### 3.1 Multi-Repo Dependency Topology Linking (`src/dependency.rs`)
 
-Command: `neuron power-up <path> --alias <name>`
+Command: `neuron link-deps --parent <alias> --child <alias>`
 
-**Execution flow:**
-1. `canonicalize()` the target path to an absolute, portable anchor.
-2. Scaffold `.neuron/conversations/` and `.neuron/backups/` if absent.
-3. Run `detect_primary_language()` — counts file extensions via `ignore::WalkBuilder`, picks the most common parseable language.
-4. Write a default `Neuron.toml` (`profile = "antigravity"`) if missing.
-5. Call `search::bootstrap_local_db()` to create `index.sqlite`.
-6. Walk all non-build, non-git source files → `parser::extract_symbols()` → `sanitize::sanitize_content()` → `search::upsert_file()`.
-7. Create or load `neuron_manifest.json`, write `session_context.md`, and `register()` in `~/.neuron/global_index.sqlite`.
+**Global Schema additions (`~/.neuron/global_index.sqlite`):**
 
-**Security rules:**
-- All symbol snippets and semantic intents pass through `sanitize_content` before any SQL insertion.
-- Skips `\target\`, `.git`, `.neuron`, and `.tmp` paths during the crawl.
-- Crawl respects `.gitignore` rules via `ignore::WalkBuilder`.
+```sql
+CREATE TABLE workspace_dependencies (
+    id          TEXT PRIMARY KEY,
+    parent_id   TEXT NOT NULL,   -- project id of the upstream/library workspace
+    child_id    TEXT NOT NULL,   -- project id of the consumer workspace
+    created_at  TEXT NOT NULL,
+    UNIQUE (parent_id, child_id)
+);
 
-### 3.2 Global Workspace Portability (`src/project_manager.rs`)
+CREATE TABLE signature_snapshots (
+    id              TEXT PRIMARY KEY,
+    project_id      TEXT NOT NULL,
+    symbol_name     TEXT NOT NULL,
+    symbol_type     TEXT NOT NULL,
+    signature_hash  TEXT NOT NULL,   -- SHA-256 of canonical signature string
+    last_seen_at    TEXT NOT NULL,
+    changed_at      TEXT,            -- NULL if no change detected yet
+    UNIQUE (project_id, symbol_name)
+);
+```
 
-- **`resolve_alias(alias)`** — looks up a registered workspace by name from the global SQLite index, returns its absolute `PathBuf`. Used by `session.rs` for cross-project pool resolution.
-- **`switch_project`** — updates `last_accessed` timestamp so the global registry always reflects the most recently active workspace.
-- **`detect_primary_language`** — async file-extension frequency analyzer, no external dependency.
+**Operations:**
+- `link_deps(parent_alias, child_alias)` — validates both aliases exist in the registry, inserts the arc.
+- `list_deps(alias)` — prints all parent and child arcs for a workspace.
+- `unlink_deps(parent_alias, child_alias)` — removes the arc.
+- `get_parent_ids(child_project_id)` — returns all parent project IDs for a given child (used by `session.rs`).
 
-### 3.3 Cross-Project Context Synthesis (`src/session.rs`)
+### 3.2 Cross-Project Signature Mutation Tracker (`src/analyzer.rs`)
 
-Command: `neuron context --include <alias1> --include <alias2> ...`
+Command: `neuron analyze --parent <alias>`
 
-**Multi-database engine:**
-1. For each `--include` alias, calls `resolve_alias()` to get the external workspace root.
-2. Opens a read-only secondary `SqlitePool` to that workspace's `index.sqlite`.
-3. Pulls top 3 files × 3 symbols (high-level), sanitizes name and intent strings.
-4. Loads that workspace's `neuron_manifest.json` and appends the last 2 evolution ledger entries.
-5. Appends a `## 🔗 Cross-Project: <alias>` section to the unified context block.
-6. **Token cap guard:** if `cross_project_md.len() > config.token_cap / 4`, truncation is applied and the loop breaks.
-7. Missing or un-indexed aliases produce a warning section rather than a hard failure.
+**Signature hashing rules:**
+- For a `Function`/`Method`: hash = SHA-256 of `"fn {name}({param_types}) -> {return_type}"` — extracted from the symbol snippet via lightweight regex.
+- For a `Struct`: hash = SHA-256 of the sorted field name list + types string.
+- For an `Enum`: hash = SHA-256 of sorted variant name list.
+- For other symbol kinds: hash = SHA-256 of the raw snippet, capped at 512 chars.
 
-### 3.4 Command Interface Changes (`src/main.rs`)
+**Mutation detection flow:**
+1. Open the parent workspace's `index.sqlite`.
+2. For each non-file symbol, compute the current signature hash.
+3. Compare against `signature_snapshots`. If the hash differs → mark `changed_at = now`.
+4. For every changed symbol, query each child workspace's FTS5 index for any `memory_units` whose `content` contains the symbol name.
+5. Print a structured **Impact Matrix** table:
 
-| New / Changed | Flag | Description |
-|---|---|---|
-| `Commands::PowerUp` | `<path>` `--alias` | Ingest foreign workspace into global registry |
-| `Commands::Context` | `--include <ALIAS>` (repeatable) | Merge named workspace into context output |
+```
+╭─────────────────────────────────────────────────────────╮
+│  IMPACT MATRIX — Parent: aether → Children analysed: 2  │
+├────────────────────┬──────────┬────────────────────────┤
+│  Symbol            │ Change   │  At-Risk Files          │
+├────────────────────┼──────────┼────────────────────────┤
+│  LedgerEntry       │ Struct ↻ │  wallet-ui/ledger.ts   │
+│  process_transfer  │ Fn sig ↻ │  relay/handler.rs      │
+╰────────────────────┴──────────┴────────────────────────╯
+```
+
+### 3.3 Cascading Intelligence Injection (`src/session.rs`)
+
+**Auto-inject on `neuron context` (no flag required):**
+1. At context-generation time, look up the current project's ID in the global index.
+2. Call `dependency::get_parent_ids()` to find all registered parent workspaces.
+3. For each parent, query `signature_snapshots WHERE changed_at IS NOT NULL AND changed_at > (now - 48h)`.
+4. If any mutations found → build a `## ⚠️ Parent Interface Mutations` markdown block listing each changed symbol, its type, and the timestamp of change.
+5. Append the block to the context output — always, even without `--include`.
 
 ---
 
-## 4. CLI REFERENCE (v10)
+## 4. CLI REFERENCE (v11)
 
 | Command | Flags | Description |
 |---|---|---|
 | `neuron init` | `--name --language` | Init project + PATH check |
-| `neuron watch` / `start` | `--path --bridge` | Watcher + optional loopback HTTP bridge |
-| `neuron context` | `--export <path\|->` `--include <alias>` | Context block; merge external workspaces |
-| `neuron power-up <path>` | `--alias <name>` | Ingest any directory into global registry |
+| `neuron watch` / `start` | `--path --bridge` | Watcher + optional HTTP bridge |
+| `neuron context` | `--export` `--include <alias>` | Context block; auto-injects parent mutations |
+| `neuron power-up <path>` | `--alias <name>` | Ingest any directory |
+| `neuron link-deps` | `--parent <alias>` `--child <alias>` | Register dependency arc |
+| `neuron analyze` | `--parent <alias>` | Scan for structural mutations + impact matrix |
 | `neuron restore` | `--from` | Auto-discover + restore context |
 | `neuron status` | | Status + PATH check |
 | `neuron diagnose` | | Full environment & DB health audit |
@@ -122,23 +151,16 @@ Command: `neuron context --include <alias1> --include <alias2> ...`
 
 ---
 
-## 5. PATHING & PORTABILITY RULES
-
-- **Absolute anchoring**: `power_up` always calls `std::fs::canonicalize()` before any path is stored — no relative paths ever reach the database.
-- **Cross-machine migration**: `path_aliases` table in the global index maps `(project_id, machine_id) → local_path`. Running `neuron init` or `neuron restore` in the new location re-registers the alias for the current machine.
-- **Token budget guard**: the `/4` cross-project fraction ensures the primary workspace always has 75% of the token budget, preventing context flooding from included workspaces.
-
----
-
-## 6. SECURITY MODEL SUMMARY
+## 5. SECURITY MODEL SUMMARY
 
 | Layer | Mechanism |
 |---|---|
-| Pre-index sanitization | `sanitize::sanitize_content()` on all content, snippets, and semantic intents |
-| Cross-project pull | `sanitize_content()` applied again on foreign DB symbol names and intents |
-| Bridge auth | Bearer token generated per session, stored in `.neuron/bridge_token` |
-| Credential patterns covered | PEM private keys, `api_key=`, `password=`, `secret=`, AWS creds, DB connection URIs |
-| .gitignore compliance | `ignore::WalkBuilder` used in `power_up` crawl and `detect_primary_language` |
+| Pre-index sanitization | `sanitize::sanitize_content()` on all content, snippets, and intents |
+| Cross-project pull | `sanitize_content()` applied on foreign symbol names and intents |
+| Signature hashing | SHA-256 of canonical form — no raw code stored in snapshot table |
+| Bridge auth | Bearer token per session, stored in `.neuron/bridge_token` |
+| Credential patterns | PEM keys, `api_key=`, `password=`, `secret=`, AWS creds, DB URIs |
+| .gitignore compliance | `ignore::WalkBuilder` used in all crawl operations |
 
 ---
 

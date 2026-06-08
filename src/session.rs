@@ -12,6 +12,7 @@ use chrono::Utc;
 use colored::Colorize;
 use sqlx;
 use std::path::Path;
+use std::str::FromStr;
 use tokio::fs;
 
 use crate::git;
@@ -422,6 +423,52 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>,
         }
     }
 
+    // ── Cascading parent mutation injection (automatic, no flag needed) ────────
+    let mut parent_mutation_md = String::new();
+    // Look up this project's ID from the global index
+    if let Ok(current_project_id) = crate::dependency::project_id_for_alias(&manifest.name).await {
+        if let Ok(parent_ids) = crate::dependency::get_parent_ids(&current_project_id).await {
+            for parent_id in &parent_ids {
+                // Get mutations within last 48 hours
+                if let Ok(mutations) = crate::dependency::get_recent_mutations(parent_id, 48).await {
+                    if !mutations.is_empty() {
+                        // Resolve parent name
+                        let parent_name = {
+                            let db_path = utils::global_db_path().ok();
+                            if let Some(db) = db_path {
+                                if db.exists() {
+                                    let opts = sqlx::sqlite::SqliteConnectOptions::from_str(
+                                        &format!("sqlite://{}", db.display())
+                                    ).ok();
+                                    if let Some(o) = opts {
+                                        if let Ok(p) = sqlx::SqlitePool::connect_with(o).await {
+                                            let row: Option<(String,)> = sqlx::query_as(
+                                                "SELECT name FROM projects WHERE id = ?1 LIMIT 1"
+                                            ).bind(parent_id).fetch_optional(&p).await.unwrap_or(None);
+                                            row.map(|(n,)| n).unwrap_or_else(|| parent_id.clone())
+                                        } else { parent_id.clone() }
+                                    } else { parent_id.clone() }
+                                } else { parent_id.clone() }
+                            } else { parent_id.clone() }
+                        };
+
+                        parent_mutation_md.push_str(&format!(
+                            "\n---\n## ⚠️ Parent Interface Mutations: `{}`\n\
+                             > *Detected within last 48 hours — review before building*\n\n",
+                            parent_name
+                        ));
+                        for (sym_name, sym_type, changed_at) in &mutations {
+                            parent_mutation_md.push_str(&format!(
+                                "* `{}` ({}) — signature changed at `{}`\n",
+                                sym_name, sym_type, &changed_at[..19]
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     let context_block = format!(
 "# NEURON ACTIVE WORKSPACE CONTEXT
 > **Project:** {} | **Branch:** `{}` | **Memory Units:** {}
@@ -433,13 +480,15 @@ pub async fn print_agent_context(project_root: &Path, export_path: Option<&str>,
 {}
 
 ## 🧩 CRITICAL MODULES & SYMBOLS IN FOCUS
-{}{}",
+{}{}{}",
         manifest.name, git_branch, unit_count,
         manifest.top_level_intent,
         ledger_md,
         modules_md,
         cross_project_md,
+        parent_mutation_md,
     );
+
 
     // Persist
     let ctx_path = project_root.join(".neuron").join("session_context.md");

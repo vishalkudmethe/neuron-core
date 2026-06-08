@@ -1,9 +1,11 @@
-//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v9)
+//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v11)
 //! CLI entrypoint. All commands are dispatched from here.
 
+mod analyzer;
 mod bridge;
 mod config;
 mod conversation;
+mod dependency;
 mod git;
 mod loop_guard;
 mod manifest;
@@ -163,6 +165,33 @@ enum Commands {
 
     /// Run a comprehensive environment and database health audit
     Diagnose,
+
+    /// Register a directional dependency arc between two workspaces
+    #[command(name = "link-deps")]
+    LinkDeps {
+        /// Alias of the upstream / library workspace
+        #[arg(short, long)]
+        parent: String,
+
+        /// Alias of the consumer / downstream workspace
+        #[arg(short, long)]
+        child: String,
+
+        /// Remove the arc instead of adding it
+        #[arg(long)]
+        unlink: bool,
+
+        /// List all arcs for the given alias instead
+        #[arg(short, long)]
+        list: bool,
+    },
+
+    /// Scan parent workspace for structural signature mutations and print impact matrix
+    Analyze {
+        /// Alias of the parent workspace to scan
+        #[arg(short, long)]
+        parent: String,
+    },
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -304,6 +333,20 @@ async fn main() -> Result<()> {
             let neuron_root = project_manager::discover_project_root().await.ok();
             utils::run_diagnostics(neuron_root.as_deref()).await?;
         }
+
+        Commands::LinkDeps { parent, child, unlink, list } => {
+            if list {
+                dependency::list_deps(&parent).await?;
+            } else if unlink {
+                dependency::unlink_deps(&parent, &child).await?;
+            } else {
+                dependency::link_deps(&parent, &child).await?;
+            }
+        }
+
+        Commands::Analyze { parent } => {
+            analyzer::analyze_parent(&parent).await?;
+        }
     }
 
     Ok(())
@@ -328,7 +371,7 @@ fn print_banner() {
     println!(
         "  {} {}  {}\n",
         "Universal Persistent Memory Layer".white().bold(),
-        "v8".bright_yellow().bold(),
+        "v11".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );
 }
