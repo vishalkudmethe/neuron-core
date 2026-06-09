@@ -272,6 +272,10 @@ enum Commands {
         /// Clear the audit log (irreversible)
         #[arg(long)]
         clear: bool,
+
+        /// Verify the cryptographic hash chain integrity of the audit log
+        #[arg(long)]
+        verify: bool,
     },
 
     /// Neuron Sessions™ — personal AI memory and cross-tab LLM coherence
@@ -538,8 +542,8 @@ async fn main() -> Result<()> {
             }
         }
 
-        Commands::Audit { export, tail, clear } => {
-            audit::run_audit_cli(export.as_deref(), tail, clear).await?;
+        Commands::Audit { export, tail, clear, verify } => {
+            audit::run_audit_cli(export.as_deref(), tail, clear, verify).await?;
         }
 
         Commands::Sessions {

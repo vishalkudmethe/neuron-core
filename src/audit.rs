@@ -11,9 +11,10 @@ use anyhow::Result;
 use chrono::Utc;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
+use sha2::{Sha256, Digest};
 use std::{
     fs::OpenOptions,
-    io::Write,
+    io::{Write, BufRead, BufReader},
     path::PathBuf,
     time::Instant,
 };
@@ -22,7 +23,7 @@ use uuid::Uuid;
 // ─── Entry Schema ─────────────────────────────────────────────────────────────
 
 /// A single, tamper-evident audit record written as one JSON line.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuditEntry {
     /// Unique ID for this log line (UUID v4).
     pub id: String,
@@ -40,7 +41,29 @@ pub struct AuditEntry {
     pub duration_ms: u64,
     /// Absolute path of the active project at call time.
     pub project: String,
+    /// SHA-256 hash of the previous log entry in the chain.
+    pub previous_hash: String,
+    /// Cryptographic SHA-256 hash verifying this entry's integrity.
+    pub hash: String,
 }
+
+impl AuditEntry {
+    /// Deterministically computes the SHA-256 hash of all entry fields.
+    pub fn calculate_hash(&self) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(self.id.as_bytes());
+        hasher.update(self.timestamp.as_bytes());
+        hasher.update(self.session_id.as_bytes());
+        hasher.update(self.tool.as_bytes());
+        hasher.update(self.params.to_string().as_bytes());
+        hasher.update(self.response_bytes.to_string().as_bytes());
+        hasher.update(self.duration_ms.to_string().as_bytes());
+        hasher.update(self.project.as_bytes());
+        hasher.update(self.previous_hash.as_bytes());
+        hex::encode(hasher.finalize())
+    }
+}
+
 
 // ─── Session ID ───────────────────────────────────────────────────────────────
 
@@ -66,11 +89,33 @@ pub fn audit_log_path() -> PathBuf {
 
 // ─── Core Writer ──────────────────────────────────────────────────────────────
 
+/// Returns the hash of the last entry in the audit log, or a genesis hash if empty.
+/// The genesis hash is 64 zeros, identical to Bitcoin's genesis block sentinel.
+fn read_last_hash() -> String {
+    let path = audit_log_path();
+    if !path.exists() {
+        return "0".repeat(64);
+    }
+    let file = match std::fs::File::open(&path) {
+        Ok(f) => f,
+        Err(_) => return "0".repeat(64),
+    };
+    let reader = BufReader::new(file);
+    let mut last_hash = "0".repeat(64);
+    for line in reader.lines().flatten() {
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&line) {
+            if let Some(h) = v["hash"].as_str() {
+                last_hash = h.to_string();
+            }
+        }
+    }
+    last_hash
+}
+
 /// Appends a single JSON line to the audit log (non-blocking, best-effort).
 /// Failures are silently swallowed so they never interrupt the hot MCP path.
 pub fn write_entry(entry: &AuditEntry) {
     if let Err(e) = try_write_entry(entry) {
-        // Degrade gracefully — audit log write failure must not crash the tool.
         tracing::warn!("audit write failed: {e}");
     }
 }
@@ -105,7 +150,9 @@ pub fn record(
     duration_ms: u64,
     project: &str,
 ) {
-    let entry = AuditEntry {
+    // Read the previous entry's hash to form the chain link.
+    let previous_hash = read_last_hash();
+    let mut entry = AuditEntry {
         id: Uuid::new_v4().to_string(),
         timestamp: Utc::now().to_rfc3339(),
         session_id: session_id(),
@@ -114,7 +161,11 @@ pub fn record(
         response_bytes,
         duration_ms,
         project: project.to_string(),
+        previous_hash: previous_hash.clone(),
+        hash: String::new(), // placeholder before calculation
     };
+    // Compute this entry's own hash (includes previous_hash in the input).
+    entry.hash = entry.calculate_hash();
     write_entry(&entry);
 }
 
@@ -136,8 +187,76 @@ where
 
 // ─── CLI: neuron audit ────────────────────────────────────────────────────────
 
+// ─── Chain Verifier ──────────────────────────────────────────────────────────
+
+/// Verifies the cryptographic hash chain of the audit log.
+/// Returns (ok: bool, total_entries: usize, first_tampered_index: Option<usize>)
+pub fn verify_chain() -> (bool, usize, Option<usize>) {
+    let path = audit_log_path();
+    if !path.exists() {
+        return (true, 0, None);
+    }
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => return (false, 0, None),
+    };
+    let entries: Vec<AuditEntry> = content
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .filter_map(|l| serde_json::from_str(l).ok())
+        .collect();
+
+    let total = entries.len();
+    let mut prev_hash = "0".repeat(64);
+
+    for (i, entry) in entries.iter().enumerate() {
+        // Check that this entry's previous_hash matches what we computed.
+        if entry.previous_hash != prev_hash {
+            return (false, total, Some(i));
+        }
+        // Recompute the expected hash from raw fields (temporarily blank hash field).
+        let mut probe = entry.clone();
+        probe.hash = String::new();
+        let expected_hash = probe.calculate_hash();
+        if entry.hash != expected_hash {
+            return (false, total, Some(i));
+        }
+        prev_hash = entry.hash.clone();
+    }
+    (true, total, None)
+}
+
+// ─── CLI: neuron audit ────────────────────────────────────────────────────────
+
 /// Display or export the audit log. Called from `main.rs`.
-pub async fn run_audit_cli(export: Option<&str>, tail: Option<usize>, clear: bool) -> Result<()> {
+pub async fn run_audit_cli(export: Option<&str>, tail: Option<usize>, clear: bool, verify: bool) -> Result<()> {
+    // ── Verify Mode ──────────────────────────────────────────────────────────
+    if verify {
+        println!("\n  {} {}\n", "AI-NEURON™".bright_cyan().bold(), "IMMUTABLE AUDIT LEDGER VERIFICATION".white().bold());
+        let path = audit_log_path();
+        if !path.exists() {
+            println!("  {} No audit log found. Nothing to verify.", "⚠".yellow().bold());
+            return Ok(());
+        }
+        let (ok, total, tampered_at) = verify_chain();
+        if ok {
+            println!(
+                "  {} Chain verified — {} entries, all SHA-256 hashes valid.",
+                "✓".green().bold(),
+                total.to_string().bright_yellow()
+            );
+            println!("  {} No tampering detected. Log is cryptographically intact.\n", "✓".green().bold());
+        } else {
+            let idx = tampered_at.unwrap_or(0);
+            println!(
+                "  {} TAMPER DETECTED at entry index #{}!",
+                "✗".red().bold(),
+                idx.to_string().bright_red()
+            );
+            println!("  {} Hash chain broken — the log has been modified after the fact.\n", "✗".red().bold());
+        }
+        return Ok(());
+    }
     let path = audit_log_path();
 
     if clear {
