@@ -1,11 +1,11 @@
 [package]
-name        = "neuron-core"
+name        = "neuron"
 version     = "1.0.0"
 edition     = "2021"
 authors     = ["AI Neuron Project"]
-description = "Universal Persistent Memory Layer for AI Coding Agents"
-license     = "AGPL-3.0-or-later"
-repository  = "https://github.com/vishalkudmethe/neuron-core"
+description = "Universal Persistent Memory Layer for AI Coding Agents — v5 Multi-Project"
+license     = "AGPL-3.0-only"
+repository  = "https://github.com/ai-neuron/neuron"
 keywords    = ["ai", "memory", "context", "agents", "persistence"]
 categories  = ["command-line-utilities", "development-tools"]
 
