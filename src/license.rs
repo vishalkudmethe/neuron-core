@@ -1,12 +1,21 @@
 //! Enterprise licensing and registration engine for corporate environments.
 //! Supports offline cryptographic verification of seat licenses.
+//!
+//! Security note: The signing salt is injected at compile time via the
+//! `NEURON_LICENSE_SALT` environment variable (set in build.rs).
+//! It is never stored in source code. Set this env var as a CI/CD secret
+//! before building production binaries.
 
 use anyhow::{bail, Result};
 use std::fs;
 use std::path::PathBuf;
 use sha2::{Sha256, Digest};
 
-const SALT: &str = "neuron_enterprise_secret_salt_2026_xyz";
+/// Compile-time injected signing salt.
+/// Source: NEURON_LICENSE_SALT env var at build time (via build.rs).
+/// Community builds without this env var use a neutral placeholder
+/// that cannot validate commercial enterprise keys.
+const SALT: &str = env!("NEURON_LICENSE_SALT");
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct LicenseInfo {
