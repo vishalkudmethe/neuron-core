@@ -8,18 +8,20 @@ This action plan details the step-by-step roadmap for executing the launch of AI
 ## Day 1: Asset Verification & Final Prep
 
 ### 1. Domain & SSL Verification
-*   **Action:** Open `https://ai-neuron.org` in the browser.
-*   **Verification:** Ensure DNS has fully propagated (no `NXDOMAIN` error) and that GitHub has successfully provisioned the SSL certificate (secure `https://` lock icon).
+*   **Action:** Open `https://ai-neuron.org` (or configured Firebase custom domain).
+*   **Verification:** Ensure DNS has fully propagated (no `NXDOMAIN` error) and that the hosting has successfully provisioned the SSL certificate (secure `https://` lock icon).
 
-### 2. GitHub Release Verification (v1.0.0)
-*   **Action:** Ensure the release workflow has run and successfully attached the three compiled binaries to the release tag:
+### 2. Firebase CDN & GitHub Release Verification (v1.1.0)
+*   **Action:** Ensure the release workflow has run for tag `v1.1.0` and successfully attached the compiled binaries:
     *   `neuron-windows-x86_64.exe`
     *   `neuron-macos-arm64`
     *   `neuron-macos-intel-x86_64`
-*   **Action:** Click each download button on `https://ai-neuron.org` to verify it successfully downloads the correct binary from the public `neuron-core` repository.
+*   **Action:** Download the binaries from GitHub, zip them, upload them to the `downloads/` folder, and deploy to Firebase Hosting (`npx firebase deploy --only hosting`).
+*   **Action:** Click each download button on the site to verify it successfully downloads the zip files directly from our Firebase CDN (no login wall).
 
 ### 3. Local Diagnostic Run
-*   **Action:** Run `cargo install --path .` (or run the compiled binary) to ensure the version outputs `1.0.0`.
+*   **Action:** Run `cargo install --path .` (or run the compiled binary) to ensure the version outputs `1.1.0`.
+*   **Action:** Run `neuron audit --verify` to test the newly implemented **Immutable Cryptographic Audit Ledger** blockchain verification.
 *   **Action:** Run `neuron watch` to verify the SQLite indexing runs flawlessly.
 
 ---
