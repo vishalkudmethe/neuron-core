@@ -37,16 +37,16 @@ use tracing_subscriber::{fmt, EnvFilter};
 
 #[derive(Parser)]
 #[command(
-    name    = "neuron",
+    name    = "ai-neuron",
     version = "1.0.0",
     author  = "AI Neuron Project",
     about   = "Universal Persistent Memory Layer for AI Coding Agents",
     long_about = r#"
-Neuron maintains complete, portable project memory (code, conversations,
+AI-NEURON maintains complete, portable project memory (code, conversations,
 decisions, architecture) that survives folder changes, restarts, logouts,
 account switches, and directory switches.
 
-Multi-project support: Neuron tracks ALL your projects globally and lets you
+Multi-project support: AI-NEURON tracks ALL your projects globally and lets you
 switch context instantly without losing memory.
 "#
 )]
@@ -61,7 +61,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Initialize a new Neuron project in the current directory
+    /// Initialize a new AI-NEURON project in the current directory
     Init {
         /// Project name (defaults to directory name)
         #[arg(short, long)]

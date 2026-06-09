@@ -1,5 +1,5 @@
 [package]
-name        = "neuron"
+name        = "ai-neuron"
 version     = "1.0.0"
 edition     = "2021"
 authors     = ["AI Neuron Project"]
@@ -10,7 +10,7 @@ keywords    = ["ai", "memory", "context", "agents", "persistence"]
 categories  = ["command-line-utilities", "development-tools"]
 
 [[bin]]
-name = "neuron"
+name = "ai-neuron"
 path = "src/main.rs"
 
 [dependencies]
