@@ -13,3 +13,7 @@
 .DS_Store
 Thumbs.db
 *.tmp
+
+# Firebase cache
+.firebase/
+
