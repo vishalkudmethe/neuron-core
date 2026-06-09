@@ -535,97 +535,163 @@
         </div>
     </section>
 
-    <!-- ENTERPRISE LICENSING SECTION -->
+    <!-- ENTERPRISE LICENSING & PRICING SECTION -->
     <section class="max-w-7xl mx-auto px-4 py-16 border-t border-cyanMuted/20">
         <div class="text-center mb-12">
-            <h3 class="text-sm font-mono tracking-widest text-cyanAccent uppercase">Commercial Operations</h3>
-            <h2 class="text-2xl sm:text-3xl font-mono text-white font-bold mt-2">Dual-Licensing & Enterprise Exemption</h2>
+            <h3 class="text-sm font-mono tracking-widest text-cyanAccent uppercase">Pricing Plans</h3>
+            <h2 class="text-2xl sm:text-3xl font-mono text-white font-bold mt-2">Transparent, Developer-First Pricing</h2>
             <p class="text-sm text-gray-400 max-w-2xl mx-auto mt-3">
-                AI-NEURON is committed to open source under AGPLv3. For proprietary environments, closed-source products, or custom integrations, we offer commercial licenses.
+                AI-NEURON is local-first and free for individual developers. Upgrade for cloud synchronization, team collaboration, or enterprise security compliance.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <!-- Tier 1: Open Source -->
-            <div class="border border-cyanMuted/20 bg-darkPanel/20 p-6 rounded-xl relative flex flex-col justify-between">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <!-- Tier 1: Local CLI -->
+            <div class="border border-cyanMuted/20 bg-darkPanel/20 p-5 rounded-xl relative flex flex-col justify-between hover:border-cyanAccent/30 transition-all duration-150">
                 <div>
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-red-500/30 bg-red-500/5 text-[10px] font-mono text-red-400 mb-4">
-                        AGPLv3 Copyleft
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-gray-500/30 bg-gray-500/5 text-[9px] font-mono text-gray-400 mb-4 uppercase">
+                        Local Only
                     </div>
-                    <h4 class="text-lg font-mono text-white font-bold mb-1">Community Edition</h4>
-                    <div class="text-2xl font-mono text-cyanAccent font-bold mb-4">Free</div>
+                    <h4 class="text-lg font-mono text-white font-bold mb-1">Local CLI</h4>
+                    <div class="text-3xl font-mono text-cyanAccent font-bold mb-1">Free</div>
+                    <div class="text-[10px] text-gray-500 font-sans mb-4">No account required</div>
                     <p class="text-xs text-gray-400 leading-relaxed mb-6">
-                        For developers, educators, and open-source contributors. Any derivative works must remain fully open-source under copyleft terms.
+                        For individual developers, educators, and open-source contributors running everything on their own local machine.
                     </p>
                 </div>
-                <ul class="space-y-2.5 text-xs text-gray-400 border-t border-cyanMuted/10 pt-4 mb-6">
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Local Context Indexing
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Standard CLI Tools
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Community Support
-                    </li>
-                </ul>
+                <div>
+                    <ul class="space-y-2.5 text-[11px] text-gray-400 border-t border-cyanMuted/10 pt-4 mb-6">
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> AST-Driven Context Engine
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> 5 Native MCP Tools (Stdio)
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Private Data Sanitizer
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Safety Loop Guards
+                        </li>
+                    </ul>
+                    <a href="#btn-windows" class="block text-center py-2 rounded border border-cyanMuted/30 hover:border-cyanAccent text-xs font-mono text-white transition-colors">
+                        Download Now
+                    </a>
+                </div>
             </div>
 
-            <!-- Tier 2: Team -->
-            <div class="border border-cyanAccent/40 bg-cyanAccent/5 p-6 rounded-xl relative flex flex-col justify-between shadow-[0_0_20px_rgba(0,229,255,0.02)]">
+            <!-- Tier 2: Personal Cloud -->
+            <div class="border border-cyanMuted/20 bg-darkPanel/20 p-5 rounded-xl relative flex flex-col justify-between hover:border-cyanAccent/30 transition-all duration-150">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-violet-500/30 bg-violet-500/5 text-[9px] font-mono text-violet-400 mb-4 uppercase">
+                        Backup & Sync
+                    </div>
+                    <h4 class="text-lg font-mono text-white font-bold mb-1">Personal Cloud</h4>
+                    <div class="text-3xl font-mono text-cyanAccent font-bold mb-1">$4.99<span class="text-xs text-gray-500 font-sans font-normal">/mo</span></div>
+                    <div class="text-[10px] text-gray-500 font-sans mb-4">Or $49 billed annually</div>
+                    <p class="text-xs text-gray-400 leading-relaxed mb-6">
+                        For developers who want secure cloud backups of their workspace contexts, histories, and cross-machine sync.
+                    </p>
+                </div>
+                <div>
+                    <ul class="space-y-2.5 text-[11px] text-gray-400 border-t border-cyanMuted/10 pt-4 mb-6">
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Everything in Local CLI
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Secure SQLite Cloud Backup
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Cross-Machine Context Sync
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Personal AI Session Ledger
+                        </li>
+                    </ul>
+                    <a href="./portal/index.html" class="block text-center py-2 rounded bg-cyanAccent/10 border border-cyanAccent hover:bg-cyanAccent/20 text-xs font-mono text-cyanAccent font-bold transition-all">
+                        Upgrade to Cloud
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tier 3: Pro Team -->
+            <div class="border border-cyanAccent/40 bg-cyanAccent/5 p-5 rounded-xl relative flex flex-col justify-between shadow-[0_0_20px_rgba(0,229,255,0.02)]">
                 <div class="absolute -top-3 right-4 px-2 py-0.5 rounded bg-cyanAccent text-[9px] font-mono text-black font-bold uppercase tracking-wider">
                     Popular
                 </div>
                 <div>
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-cyanAccent/30 bg-cyanAccent/5 text-[10px] font-mono text-cyanAccent mb-4">
-                        Proprietary Exemption
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-cyanAccent/30 bg-cyanAccent/5 text-[9px] font-mono text-cyanAccent mb-4 uppercase">
+                        Collaborative
                     </div>
-                    <h4 class="text-lg font-mono text-white font-bold mb-1">Team License</h4>
-                    <div class="text-2xl font-mono text-cyanAccent font-bold mb-4">$199<span class="text-xs text-gray-500 font-sans font-normal">/month</span></div>
+                    <h4 class="text-lg font-mono text-white font-bold mb-1">Pro Team</h4>
+                    <div class="text-3xl font-mono text-cyanAccent font-bold mb-1">$9.99<span class="text-xs text-gray-500 font-sans font-normal">/user/mo</span></div>
+                    <div class="text-[10px] text-gray-400 font-sans mb-4">Billed annually ($120/yr)</div>
                     <p class="text-xs text-gray-300 leading-relaxed mb-6">
-                        For small teams and startups (up to 25 developer seats) embedding context tools into private, proprietary workflows.
+                        For small teams and fast-moving startups integrating context intelligence across shared microservices.
                     </p>
                 </div>
-                <ul class="space-y-2.5 text-xs text-gray-300 border-t border-cyanMuted/20 pt-4 mb-6">
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> 25 Developer Seats
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Proprietary Use Exemption
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Email Support (24h SLA)
-                    </li>
-                </ul>
+                <div>
+                    <ul class="space-y-2.5 text-[11px] text-gray-300 border-t border-cyanMuted/20 pt-4 mb-6">
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Everything in Personal Cloud
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Shared Workspace Indexes
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Dependency Mutation Alerts
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Team Impact Graphs
+                        </li>
+                    </ul>
+                    <a href="mailto:enterprise@ai-neuron.org?subject=Pro%20Team%20Licensing" class="block text-center py-2 rounded bg-cyanAccent text-xs font-mono text-black font-bold hover:bg-cyanMuted transition-colors">
+                        Start Free Trial
+                    </a>
+                </div>
             </div>
 
-            <!-- Tier 3: Enterprise -->
-            <div class="border border-cyanMuted/20 bg-darkPanel/20 p-6 rounded-xl relative flex flex-col justify-between">
+            <!-- Tier 4: Enterprise -->
+            <div class="border border-cyanMuted/20 bg-darkPanel/20 p-5 rounded-xl relative flex flex-col justify-between hover:border-cyanAccent/30 transition-all duration-150">
                 <div>
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-purple-500/30 bg-purple-500/5 text-[10px] font-mono text-purple-400 mb-4">
-                        Custom SLAs & OEM
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-purple-500/30 bg-purple-500/5 text-[9px] font-mono text-purple-400 mb-4 uppercase">
+                        SOC 2 & SSO
                     </div>
-                    <h4 class="text-lg font-mono text-white font-bold mb-1">Enterprise & OEM</h4>
-                    <div class="text-2xl font-mono text-cyanAccent font-bold mb-4">Custom</div>
+                    <h4 class="text-lg font-mono text-white font-bold mb-1">Enterprise</h4>
+                    <div class="text-3xl font-mono text-cyanAccent font-bold mb-1">$19.99<span class="text-xs text-gray-500 font-sans font-normal">/user/mo</span></div>
+                    <div class="text-[10px] text-gray-500 font-sans mb-4">Billed annually ($240/yr)</div>
                     <p class="text-xs text-gray-400 leading-relaxed mb-6">
-                        For large organizations, compliance-driven teams, and commercial vendors looking to embed AI-NEURON as an OEM component in proprietary SaaS/IDE platforms.
+                        For security-driven engineering departments requiring enterprise-grade governance and custom compliance layers.
                     </p>
                 </div>
-                <ul class="space-y-2.5 text-xs text-gray-400 border-t border-cyanMuted/10 pt-4 mb-6">
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Unlimited Developer Seats
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Custom Integration Support
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i> Dedicated Enterprise SLAs
-                    </li>
-                </ul>
+                <div>
+                    <ul class="space-y-2.5 text-[11px] text-gray-400 border-t border-cyanMuted/10 pt-4 mb-6">
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Everything in Pro Team
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> SAML SSO / Okta Integration
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> SOC 2 & GDPR Audit Exports
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Centralized Secret Policies
+                        </li>
+                    </ul>
+                    <a href="mailto:enterprise@ai-neuron.org?subject=Enterprise%20Licensing%20Inquiry" class="block text-center py-2 rounded border border-purple-500/30 hover:border-purple-500 text-xs font-mono text-purple-400 transition-colors">
+                        Request Quote
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="text-center mt-12">
+        <!-- On-Premise Disclaimer -->
+        <p class="text-[11px] text-center font-mono text-gray-500 mt-8 max-w-3xl mx-auto">
+            *Need total isolation? We offer <strong>On-Premise / Private Cloud deployments</strong> starting at $24.99/user/month (minimum 100 seats) for institutions, financial groups, and large enterprises.
+        </p>
+
+        <div class="text-center mt-10">
             <a href="mailto:enterprise@ai-neuron.org?subject=Commercial%20Licensing%20Inquiry" class="inline-flex items-center gap-2 px-8 py-3 rounded-lg border border-cyanAccent bg-cyanAccent/10 text-cyanAccent font-mono text-sm hover:bg-cyanAccent/20 hover:shadow-[0_0_15px_rgba(0,229,255,0.1)] transition-all duration-150">
                 <i data-lucide="mail" class="w-4 h-4"></i> Contact Enterprise Operations (enterprise@ai-neuron.org)
             </a>
