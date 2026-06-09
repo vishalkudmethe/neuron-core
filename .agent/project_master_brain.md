@@ -1,4 +1,4 @@
-# Project Neuron — Master Brain
+# AI-NEURON™ — Master Brain
 **Version**: v17 — Personal AI Memory Identity Ledger (Sessions) + Stdio MCP Server
 **Status**: Active Development
 **Last Updated**: 2026-06-09
@@ -7,9 +7,9 @@
 
 ## 1. MISSION STATEMENT
 
-Neuron is the Universal Persistent Memory Layer for AI Coding Agents. It ships as a single, globally-installed binary (`neuron`) that runs on any workstation without runtime dependencies. It maintains complete, portable project memory (code, conversations, decisions, architecture) that survives folder changes, PC restarts, directory migrations, and machine transfers.
+AI-NEURON™ is the Universal Persistent Memory Layer for AI Coding Agents. It ships as a single, globally-installed binary (`neuron`) that runs on any workstation without runtime dependencies. It maintains complete, portable project memory (code, conversations, decisions, architecture) that survives folder changes, PC restarts, directory migrations, and machine transfers.
 
-With v16, Neuron implements native support for the **Model Context Protocol (MCP)** via standard I/O streams (`neuron start-mcp`). This enables external AI agents and IDE tools (e.g., Cursor, Claude Code, Windsurf) to query project contexts, FTS5 search indexes, and mutation graphs directly over JSON-RPC 2.0 without local HTTP port contention or network-level configurations.
+With v16, AI-NEURON™ implements native support for the **Model Context Protocol (MCP)** via standard I/O streams (`neuron start-mcp`). This enables external AI agents and IDE tools (e.g., Cursor, Claude Code, Windsurf) to query project contexts, FTS5 search indexes, and mutation graphs directly over JSON-RPC 2.0 without local HTTP port contention or network-level configurations.
 
 ---
 
@@ -99,7 +99,7 @@ With v16, Neuron implements native support for the **Model Context Protocol (MCP
     "tools": {}
   },
   "serverInfo": {
-    "name": "neuron-mcp",
+    "name": "ai-neuron-mcp",
     "version": "1.0.0"
   }
 }
@@ -201,4 +201,4 @@ With v16, Neuron implements native support for the **Model Context Protocol (MCP
 
 ---
 
-*This document is the canonical source of truth for Project Neuron architecture.*
+*This document is the canonical source of truth for AI-NEURON™ architecture.*

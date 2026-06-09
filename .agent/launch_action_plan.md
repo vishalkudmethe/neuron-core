@@ -1,7 +1,7 @@
-# Neuron Core™: Phase 1 Launch & Hype Action Plan
+# AI-NEURON™: Phase 1 Launch & Hype Action Plan
 **Target Milestone:** 5,000 GitHub Stars & 10,000 Weekly Active Users (WAU)
 
-This action plan details the step-by-step roadmap for executing the launch of Neuron Core™ starting tomorrow morning.
+This action plan details the step-by-step roadmap for executing the launch of AI-NEURON™ starting tomorrow morning.
 
 ---
 
@@ -27,12 +27,12 @@ This action plan details the step-by-step roadmap for executing the launch of Ne
 ## Day 2: The Viral Launch (Hacker News & Twitter/X)
 
 ### 1. Hacker News (Show HN)
-*   **Submission Title:** `Show HN: Neuron Core – Local-first SQLite context engine for AI coding agents`
+*   **Submission Title:** `Show HN: AI-NEURON – Local-first SQLite context engine for AI coding agents`
 *   **Link:** `https://ai-neuron.org` (or directly to the GitHub repo `https://github.com/vishalkudmethe/neuron-core`)
 *   **Launch Time:** Target **8:00 AM EST (5:30 PM IST)** — this is the peak reading time for Hacker News.
 *   **Founder's Intro Comment (Post immediately after submitting):**
     > *“Hey HN,*
-    > *I built Neuron Core because I was tired of AI agents (like Claude Code and Cursor) losing context of my codebase, running slow, or blowing through my API limits. Neuron Core runs locally in the background, watches files, and builds a SQLite index of symbols and blast-radius mappings at native speed.*
+    > *I built AI-NEURON because I was tired of AI agents (like Claude Code and Cursor) losing context of my codebase, running slow, or blowing through my API limits. AI-NEURON runs locally in the background, watches files, and builds a SQLite index of symbols and blast-radius mappings at native speed.*
     > *It exposes 5 standard MCP tools over stdio, keeps 100% of your data private, and automatically sanitizes credentials before sending them to the LLM. Written in Rust, open source under AGPLv3. Excited to hear what you think!”*
 
 ### 2. Twitter/X Thread Release
@@ -50,8 +50,8 @@ Create highly technical, text-based posts detailing *how* it works (e.g., FTS5 i
 *   **`/r/selfhosted`** / **`/r/commandline`** (Focus on CLI utility)
 
 ### 2. AI Tool Communities
-*   **Cursor Forum:** Post in the Cursor community showcase explaining how to connect Neuron Core as an MCP tool inside Cursor.
-*   **Claude Developer Forums:** Showcase how Claude Code can query Neuron Core via stdio.
+*   **Cursor Forum:** Post in the Cursor community showcase explaining how to connect AI-NEURON as an MCP tool inside Cursor.
+*   **Claude Developer Forums:** Showcase how Claude Code can query AI-NEURON via stdio.
 
 ### 3. Tech Newsletters Outbound
 Email or submit to the following developer newsletters (they are always looking for trending open-source dev-tools):

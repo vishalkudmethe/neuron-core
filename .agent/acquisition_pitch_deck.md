@@ -1,4 +1,4 @@
-# Project Neuron: Strategic Positioning & Acquisition Pitch Deck
+# AI-NEURON™: Strategic Positioning & Acquisition Pitch Deck
 
 This document provides a highly structured, VC-grade positioning framework designed to attract strategic acquisition offers or investment from key players in the AI developer tool space (e.g., GitHub/Microsoft, Anthropic, Cursor/Anysphere, Cognition, and VCs).
 
@@ -15,15 +15,15 @@ To perform multi-file edits, agents must repeatedly scan codebases. This results
 2. **Astronomical API Costs:** Feeding entire codebases into context windows wastes millions of tokens.
 3. **Enterprise Compliance Blocks:** Security teams reject sending entire proprietary repositories to third-party AI clouds for indexing.
 
-### The Solution: Neuron Core
-Neuron acts as the **standardized local memory ledger** for AI agents. By executing locally next to the compiler and exposing a zero-latency SQLite FTS5 index via the Model Context Protocol (MCP), Neuron solves the context problem with zero cloud dependency.
+### The Solution: AI-NEURON™
+AI-NEURON™ acts as the **standardized local memory ledger** for AI agents. By executing locally next to the compiler and exposing a zero-latency SQLite FTS5 index via the Model Context Protocol (MCP), AI-NEURON™ solves the context problem with zero cloud dependency.
 
 ---
 
 ## 2. The Acquisition/Investment Pitch Deck (Slide-by-Slide)
 
 ### Slide 1: The Title Slide
-*   **Headline:** Neuron Core: The Local Memory Layer for AI Software Engineering.
+*   **Headline:** AI-NEURON™: The Local Memory Layer for AI Software Engineering.
 *   **Subtitle:** Zero-latency, privacy-compliant codebase context for autonomous AI agents.
 *   **Visual:** Core architecture diagram highlighting the localhost boundary.
 
@@ -34,7 +34,7 @@ Neuron acts as the **standardized local memory ledger** for AI agents. By execut
     *   Existing cloud-based vector search is too slow to update during active local debugging cycles.
     *   Agents need *instant* answers on symbol definitions, downstream blast radius, and structure.
 
-### Slide 3: The Neuron Engine
+### Slide 3: The AI-NEURON™ Engine
 *   **Headline:** Local SQLite Indexer running at Native Speed.
 *   **Key Points:**
     *   **Real-time Watcher:** Instant SQLite synchronization upon file modifications.
@@ -48,47 +48,46 @@ Neuron acts as the **standardized local memory ledger** for AI agents. By execut
     *   **5 Core Tools Exposed:**
         1. `get_project_context` (Dense map of active codebase)
         2. `search_symbols` (FTS5 search across workspace files)
-        3. `get_impact_graph` (Blast-radius tracing of mutation side-effects)
-        4. `get_symbol_info` (Semantic intent & exact definition code snippet)
-        5. `get_file_content` (Sanitized 16KB content delivery)
+        3. `get_impact_graph` (Downstream blast radius mutation paths)
+        4. `get_symbol_info` (AST declaration definition and scope details)
+        5. `get_file_content` (Sanitized read of files in workspace)
 
-### Slide 5: Strategic Moats & Protection
-*   **Headline:** Security-First Developer Adoption.
+### Slide 5: The Enterprise Expansion Vector
+*   **Headline:** Enterprise Integration: SOC 2 & Dual Licensing.
 *   **Key Points:**
-    *   **Zero-Cloud Exfiltration:** 100% of indexing database resides in `.neuron/index.sqlite` on the user's hard drive.
-    *   **Enterprise-Ready:** Hardened data sanitization automatically scrubs secrets, private keys, and passwords before serving context to the active LLM.
-    *   **AGPLv3 Licensing:** Protects open-source integrity, preventing closed-source proprietary wrappers from copying the codebase without contributing changes back.
+    *   Dual-licensing model (AGPLv3 for open source, commercial license for teams/OEMs) establishes clear commercial boundaries.
+    *   Cryptographic seat licensing validates workstation access offline with signature security.
+    *   Local JSONL audit trails satisfy compliance requirements by logging agent actions without exfiltrating code.
 
-### Slide 6: The Vision — Global Multi-Project Brain
-*   **Headline:** From Local Files to a Unified Workspace Context.
+### Slide 6: The AI-Neuron Sessions™ Coherence Layer
+*   **Headline:** Solving Session Amnesia with the Identity Ledger.
 *   **Key Points:**
-    *   Neuron's v5 architecture supports global cross-project switching and global schema indexing.
-    *   Future roadmap includes telemetry-driven indexers and cross-repository impact graphs for microservices.
+    *   Cross-tab context bleeding solved by tracking active LLM profiles, goals, and recent episodes in SQLite.
+    *   Injects a token-efficient persona profile before agent prompts.
+    *   Standardizes developer memory across Claude, Gemini, and custom agents.
 
 ---
 
-## 3. Strategic Acquisition / Investment Partners
+## 3. Strategic Buyer Alignment
 
-| Target Group | Target Entity | Strategic Motivation |
+| Strategic Buyer | Potential Angle / Fit | Synergies |
 |---|---|---|
-| **IDE Ecosystems** | **Anysphere (Cursor)** | Replaces their closed-source indexing daemon with a faster, standardized Rust engine, reducing cloud indexing overhead. |
-| **IDE Ecosystems** | **Microsoft (GitHub Copilot)** | Integrates local FTS5 indexing directly into the VS Code task runner, offering offline Copilot reasoning. |
-| **Frontier AI Labs** | **Anthropic (Claude Code)** | Provides Claude's terminal agent with a pre-configured local tool client to instantly run multi-file updates. |
-| **Frontier AI Labs** | **Google AI (Gemini / IDX)** | Powers Project IDX (Google's web IDE) with an instant local/remote indexing daemon. Feeds structured codebase maps into Gemini's 2M context window to prevent high-token hallucinations. |
-| **Frontier AI Labs** | **xAI (Grok / Grok Code)** | Grok Code requires a high-performance, local-first context engine. Neuron's raw Rust speed and open-source alignment match xAI's developer culture. |
-| **AI Agent Startups** | **Cognition AI (Devin)** | Gives autonomous agents a standardized memory interface to index local workspaces without relying on heavy cloud indexing. |
-| **Venture Capital** | **Developer-focused VCs** | Validates the "Local-First AI" thesis: developers will demand local data control and privacy-preserving AI context tools. |
+| **Cursor / Anysphere** | Native Memory Daemon | Integrate AI-NEURON™ as a native background service inside Cursor to speed up composer context generation by 10x and save $1M+/month in model token costs. |
+| **Anthropic / Claude Code** | MCP Core Integration | Package AI-NEURON™ directly into Claude Code CLI as the default local indexing driver to address file search limits and protect enterprise source code. |
+| **GitHub / Copilot Workspace** | Developer Seat Utility | Deploy AI-NEURON™ as part of GitHub CLI (`gh`) to run low-overhead static analysis and support offline work. |
+| **Cognition (Devin) / Grok** | Agentic Infrastructure | Utilize the identity ledger and dependency linker inside remote Dev environments to automate debugging loops and prevent code drift. |
+| **Venture Capital** | Developer-focused VCs | Validates the "Local-First AI" thesis: developers will demand local data control and privacy-preserving AI context tools. |
 
 ---
 
 ## 4. Twitter / X Announcement Thread (Slide Blueprint)
 
-To build public hype and grab the attention of tech leaders, post a high-signal thread demonstrating Neuron's capabilities:
+To build public hype and grab the attention of tech leaders, post a high-signal thread demonstrating AI-NEURON's capabilities:
 
 ### Post 1: The Hook 🪝
 > Autonomous AI coding agents are incredibly smart, but they suffer from severe context amnesia. Every time you open a chat, the AI starts from scratch.
 >
-> We built a solution: **Neuron Core**.
+> We built a solution: **AI-NEURON™**.
 >
 > An open-source, local-first memory engine that acts as the permanent brain for AI developer agents. 🧠👇
 > [Link to GitHub Pages/Repo]
@@ -101,15 +100,15 @@ To build public hype and grab the attention of tech leaders, post a high-signal 
 > 💸 Astronomical token bills
 > 🔒 Security compliance issues with cloud exfiltration
 
-### Post 3: The Neuron Way ⚡
-> Neuron runs locally in the background on your machine.
+### Post 3: The AI-Neuron Way ⚡
+> AI-NEURON runs locally in the background on your machine.
 >
 > Written in Rust, it watches your project directory and builds a lightning-fast SQLite index of files, structural symbols, and dependencies in real-time.
 >
 > Low memory footprint, 100% private, zero data leaves your disk.
 
 ### Post 4: Universal Integration (MCP) 🔌
-> Using the Model Context Protocol (MCP), Neuron exposes a standard JSON-RPC interface to any agent.
+> Using the Model Context Protocol (MCP), AI-NEURON exposes a standard JSON-RPC interface to any agent.
 >
 > It instantly plugs into:
 > ✅ Claude Code
@@ -118,7 +117,7 @@ To build public hype and grab the attention of tech leaders, post a high-signal 
 > ✅ Custom terminal agents
 
 ### Post 5: Visualizing Capabilities 📊
-> Inside Neuron:
+> Inside AI-NEURON:
 > 1. `get_project_context` - Dense map of the codebase architecture.
 > 2. `search_symbols` - Instant FTS5 text search.
 > 3. `get_impact_graph` - Traverses the codebase to map change side-effects.
@@ -128,7 +127,7 @@ To build public hype and grab the attention of tech leaders, post a high-signal 
 > [Attach the Interactive Tree Diagram SVG / HTML image]
 
 ### Post 6: Launch & Open Source 🚀
-> Neuron Core is now officially public under AGPLv3.
+> AI-NEURON is now officially public under AGPLv3.
 >
 > Grab the v1.0.0 binaries for Windows & macOS, check the source, or host your own landing page.
 >
