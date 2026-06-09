@@ -252,7 +252,6 @@ enum Commands {
         #[arg(short, long, default_value = "9090")]
         port: u16,
     },
-
     /// Register a commercial or enterprise license key
     Register {
         /// The cryptographic license key string (format: AINEURON-ENT-<COMPANY>-<EXPIRY>-<SIG>)
@@ -517,7 +516,6 @@ async fn main() -> Result<()> {
             println!("  {} Starting AI-NEURON™ Portal API server...", "✦".cyan().bold());
             portal_api::start_portal_server(port).await?;
         }
-
         Commands::Register { key } => {
             match license::register_key(&key) {
                 Ok(info) => {

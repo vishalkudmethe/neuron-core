@@ -89,7 +89,6 @@ CREATE TABLE IF NOT EXISTS synced_memories (
     synced_at         TEXT NOT NULL,
     author            TEXT NOT NULL
 );
-
 -- FTS5 index for fast episode search
 CREATE VIRTUAL TABLE IF NOT EXISTS episodes_fts USING fts5(
     id UNINDEXED, summary, tags,

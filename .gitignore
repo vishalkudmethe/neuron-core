@@ -1,6 +1,6 @@
 # Rust build artifacts
 /target/
-Cargo.lock
+
 
 # Neuron local data (keep .neuron/ structure but ignore runtime data)
 .neuron/index.sqlite
