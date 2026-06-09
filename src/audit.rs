@@ -1,4 +1,4 @@
-//! Neuron Core™ Enterprise Audit Logging Engine
+//! AI-Neuron™ Enterprise Audit Logging Engine
 //!
 //! Every MCP tool invocation is stamped with a unique ID, ISO-8601 timestamp,
 //! session ID, tool name, call parameters, response byte-count, duration, and
@@ -189,7 +189,7 @@ pub async fn run_audit_cli(export: Option<&str>, tail: Option<usize>, clear: boo
     }
 
     // Pretty terminal summary
-    println!("\n  {} {}\n", "NEURON CORE™".bright_cyan().bold(), "ENTERPRISE AUDIT LOG".white().bold());
+    println!("\n  {} {}\n", "AI-NEURON™".bright_cyan().bold(), "ENTERPRISE AUDIT LOG".white().bold());
     println!(
         "  {:<38}  {:<20}  {:<26}  {:>8}  {:>7}",
         "ENTRY ID".bright_white().bold(),

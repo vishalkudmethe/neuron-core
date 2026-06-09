@@ -215,10 +215,10 @@ neuron restore         # detects .neuron/, registers path alias, restores contex
 
 ## Licensing
 
-Neuron Core is dual-licensed under the **GNU Affero General Public License (AGPLv3)** and a **Commercial Enterprise License**.
+AI-NEURON is dual-licensed under the **GNU Affero General Public License (AGPLv3)** and a **Commercial Enterprise License**.
 
-- **Open Source:** For personal use, educational use, and open-source projects, Neuron Core is free under the terms of the [AGPLv3](LICENSE).
-- **Commercial Use:** If you are embedding Neuron Core inside closed-source proprietary software, shipping it within enterprise environments, or integrating it in OEM products, you must purchase a commercial license. See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) for details.
+- **Open Source:** For personal use, educational use, and open-source projects, AI-NEURON is free under the terms of the [AGPLv3](LICENSE).
+- **Commercial Use:** If you are embedding AI-NEURON inside closed-source proprietary software, shipping it within enterprise environments, or integrating it in OEM products, you must purchase a commercial license. See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) for details.
 
 For commercial inquiries, custom integrations, or SLAs, contact us at: **enterprise@ai-neuron.org**
 

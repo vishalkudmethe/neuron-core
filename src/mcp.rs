@@ -115,7 +115,7 @@ pub(crate) async fn handle_request(project_root: &Path, req: &JsonRpcRequest) ->
                     "tools": {}
                 },
                 "serverInfo": {
-                    "name": "neuron-mcp",
+                    "name": "ai-neuron-mcp",
                     "version": "1.0.0"
                 }
             });

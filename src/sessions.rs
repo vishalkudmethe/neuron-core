@@ -1,4 +1,4 @@
-//! Neuron Sessions™ — Personal AI Memory Daemon (v0.1 — Identity Ledger)
+//! AI-Neuron Sessions™ — Personal AI Memory Daemon (v0.1 — Identity Ledger)
 //!
 //! This module solves the fundamental LLM personalization problem:
 //!   - Session amnesia (every tab starts from zero)
@@ -10,7 +10,7 @@
 //! At any new LLM session start, `get_context_block()` returns a token-efficient
 //! (~2000 token max) context injection string ready for any MCP-compatible LLM.
 //!
-//! This is Neuron Sessions™ v0.1 — the Identity Ledger foundation.
+//! This is AI-Neuron Sessions™ v0.1 — the Identity Ledger foundation.
 //! v0.2 will expose this via an MCP `get_user_context` tool.
 
 use anyhow::Result;
@@ -271,10 +271,10 @@ pub async fn get_active_goals(pool: &SqlitePool) -> Result<Vec<String>> {
 ///
 /// Output format (plain text, MCP-injectable):
 /// ```
-/// [NEURON SESSIONS™ CONTEXT BLOCK]
+/// [AI-NEURON SESSIONS™ CONTEXT BLOCK]
 /// USER_PROFILE: expertise_rust=expert | style=direct | lang=English
 /// ACTIVE_TABS: [Tab A: Rust debugging] [Tab B: THIS SESSION]
-/// CURRENT_GOALS: Launch Neuron Core, achieve 5000 GitHub stars
+/// CURRENT_GOALS: Launch AI-NEURON, achieve 5000 GitHub stars
 /// RECENT_EPISODES: Solved production outage (2026-06-01) | Deployed ai-neuron.org (2026-06-08)
 /// INSTRUCTION: Do not repeat explanations already given. User knows these topics deeply.
 /// [END CONTEXT BLOCK]
@@ -322,7 +322,7 @@ pub async fn get_context_block(pool: &SqlitePool, this_tab_id: &str) -> Result<S
         .join(" | ");
 
     let block = format!(
-        "[NEURON SESSIONS™ CONTEXT BLOCK]\n\
+        "[AI-NEURON SESSIONS™ CONTEXT BLOCK]\n\
          USER_PROFILE: {profile_str}\n\
          ACTIVE_TABS: {tabs_str}\n\
          CURRENT_GOALS: {goals_str}\n\
@@ -354,7 +354,7 @@ pub async fn run_sessions_cli(cmd: SessionsCmd) -> Result<()> {
     match cmd {
         SessionsCmd::Init => {
             println!(
-                "{} Neuron Sessions™ identity ledger initialized at {}",
+                "{} AI-Neuron Sessions™ identity ledger initialized at {}",
                 "✓".green().bold(),
                 sessions_db_path().display().to_string().cyan()
             );
@@ -414,7 +414,7 @@ pub async fn run_sessions_cli(cmd: SessionsCmd) -> Result<()> {
         SessionsCmd::Show => {
             println!(
                 "\n  {} {}\n",
-                "NEURON SESSIONS™".bright_cyan().bold(),
+                "AI-NEURON SESSIONS™".bright_cyan().bold(),
                 "Identity Ledger".white()
             );
 

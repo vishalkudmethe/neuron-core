@@ -64,11 +64,11 @@ pub fn get_active_license() -> LicenseInfo {
 }
 
 /// Validate a license key format and signature.
-/// Key format: NEURON-ENT-<COMPANY>-<EXPIRY>-<SIGNATURE>
+/// Key format: AINEURON-ENT-<COMPANY>-<EXPIRY>-<SIGNATURE>
 pub fn verify_license_key(key: &str) -> Result<LicenseInfo> {
     let key = key.trim();
-    if !key.starts_with("NEURON-ENT-") {
-        bail!("Invalid license prefix. Must start with 'NEURON-ENT-'");
+    if !key.starts_with("AINEURON-ENT-") {
+        bail!("Invalid license prefix. Must start with 'AINEURON-ENT-'");
     }
     
     let parts: Vec<&str> = key.split('-').collect();
@@ -77,7 +77,7 @@ pub fn verify_license_key(key: &str) -> Result<LicenseInfo> {
     }
     
     // Structure:
-    // parts[0]: NEURON
+    // parts[0]: AINEURON
     // parts[1]: ENT
     // parts[2]: Company Name (base64 encoded or raw if split-safe, let's assume raw string but replacing spaces with '_')
     // parts[3]: Expiry Date (YYYYMMDD)
@@ -118,5 +118,5 @@ pub fn generate_test_license_key(company: &str, expiry_yyyymmdd: &str) -> String
     let mut hasher = Sha256::new();
     hasher.update(input.as_bytes());
     let sig = hex::encode(hasher.finalize());
-    format!("NEURON-ENT-{}-{}-{}", comp_param, expiry_yyyymmdd, sig)
+    format!("AINEURON-ENT-{}-{}-{}", comp_param, expiry_yyyymmdd, sig)
 }

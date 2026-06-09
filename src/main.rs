@@ -246,7 +246,7 @@ enum Commands {
 
     /// Register a commercial or enterprise license key
     Register {
-        /// The cryptographic license key string (format: NEURON-ENT-<COMPANY>-<EXPIRY>-<SIG>)
+        /// The cryptographic license key string (format: AINEURON-ENT-<COMPANY>-<EXPIRY>-<SIG>)
         #[arg(index = 1)]
         key: String,
     },
@@ -596,8 +596,9 @@ fn print_banner() {
         .bold()
     );
     println!(
-        "  {} {}  {}",
-        "Universal Persistent Memory Layer".white().bold(),
+        "  {} {} {}  {}",
+        "AI-NEURON™".bright_cyan().bold(),
+        "— Universal Persistent Memory Layer".white().bold(),
         "v17".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );

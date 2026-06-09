@@ -1,11 +1,11 @@
-# Neuron Core™ — Commercial License Agreement
+# AI-NEURON™ — Commercial License Agreement
 
-This Commercial License Agreement (the "Agreement") is a legal agreement between you (either an individual or a single entity, "Licensee") and the copyright owner of Neuron Core™ ("Licensor") for the proprietary use, modification, and distribution of the Neuron Core™ software (the "Software").
+This Commercial License Agreement (the "Agreement") is a legal agreement between you (either an individual or a single entity, "Licensee") and the copyright owner of AI-NEURON™ ("Licensor") for the proprietary use, modification, and distribution of the AI-NEURON™ software (the "Software").
 
 ---
 
 ## 1. Dual-Licensing Model
-Neuron Core™ is dual-licensed:
+AI-NEURON™ is dual-licensed:
 1. **Open Source (AGPLv3):** For non-commercial, open-source community use. Any derivative work or product embedding the Software must also be open-sourced under the AGPLv3.
 2. **Commercial License:** For proprietary, closed-source enterprise, team, or OEM integrations. By purchasing this Commercial License, Licensee is exempted from the copyleft requirements of the AGPLv3.
 
@@ -40,4 +40,4 @@ To purchase a signed commercial license agreement or request custom integration 
 📧 **enterprise@ai-neuron.org**
 
 ---
-*© 2026 Neuron Core. All rights reserved.*
+*© 2026 AI-NEURON. All rights reserved.*
