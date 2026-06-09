@@ -60,9 +60,16 @@ struct GetFileContentArgs {
     path: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct GetUserContextArgs {
+    tab_id: String,
+    topic: Option<String>,
+    llm: Option<String>,
+}
+
 pub async fn run_mcp_server(project_root: &Path) -> Result<()> {
     eprintln!("  [MCP] Starting Model Context Protocol (MCP) server over stdio...");
-    eprintln!("  [MCP] Exposing tools: get_project_context, search_symbols, get_impact_graph, get_symbol_info, get_file_content");
+    eprintln!("  [MCP] Exposing tools: get_project_context, search_symbols, get_impact_graph, get_symbol_info, get_file_content, get_user_context");
 
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin).lines();
@@ -188,6 +195,28 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                                 }
                             },
                             "required": ["path"]
+                        }
+                    },
+                    {
+                        "name": "get_user_context",
+                        "description": "Retrieve the token-efficient global personal AI memory block (user profile, active goals, recent episodes, and other tabs' active contexts) for cross-tab coherence and session personalization.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "tab_id": {
+                                    "type": "string",
+                                    "description": "Opaque identifier for the active editor tab or session window"
+                                },
+                                "topic": {
+                                    "type": "string",
+                                    "description": "Optional updated short summary/topic of the conversation in this tab"
+                                },
+                                "llm": {
+                                    "type": "string",
+                                    "description": "Optional name of the LLM provider/client for this session (e.g. gemini, claude)"
+                                }
+                            },
+                            "required": ["tab_id"]
                         }
                     }
                 ]
@@ -383,6 +412,63 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                             })
                         }
                         Err(e) => Some(error_response(req.id.clone(), -32603, format!("File content lookup failed: {}", e))),
+                    }
+                }
+                "get_user_context" => {
+                    let args_val = match call_params.arguments {
+                        Some(a) => a,
+                        None => {
+                            return Some(error_response(req.id.clone(), -32602, "Missing arguments".to_string()));
+                        }
+                    };
+                    let args: GetUserContextArgs = match serde_json::from_value(args_val) {
+                        Ok(a) => a,
+                        Err(e) => {
+                            return Some(error_response(req.id.clone(), -32602, format!("Invalid arguments: {}", e)));
+                        }
+                    };
+
+                    match crate::sessions::open_pool().await {
+                        Ok(pool) => {
+                            if args.topic.is_some() || args.llm.is_some() {
+                                let topic_val = args.topic.as_deref().unwrap_or("active context");
+                                let llm_val = args.llm.as_deref().unwrap_or("unknown");
+                                if let Err(e) = crate::sessions::upsert_session(&pool, &args.tab_id, topic_val, llm_val).await {
+                                    tracing::warn!("Failed to log active session via MCP: {}", e);
+                                }
+                            }
+                            match crate::sessions::get_context_block(&pool, &args.tab_id).await {
+                                Ok(ctx_block) => {
+                                    audit::record(
+                                        "get_user_context",
+                                        &serde_json::json!({
+                                            "tab_id": &args.tab_id,
+                                            "topic": &args.topic,
+                                            "llm": &args.llm
+                                        }),
+                                        ctx_block.len(),
+                                        _t0.elapsed().as_millis() as u64,
+                                        &_proj
+                                    );
+                                    let content = serde_json::json!({
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": ctx_block
+                                            }
+                                        ]
+                                    });
+                                    Some(JsonRpcResponse {
+                                        jsonrpc: "2.0".to_string(),
+                                        id: req.id.clone(),
+                                        result: Some(content),
+                                        error: None,
+                                    })
+                                }
+                                Err(e) => Some(error_response(req.id.clone(), -32603, format!("Failed to generate sessions context: {}", e))),
+                            }
+                        }
+                        Err(e) => Some(error_response(req.id.clone(), -32603, format!("Failed to open sessions database: {}", e))),
                     }
                 }
                 _ => Some(error_response(req.id.clone(), -32601, format!("Tool not found: {}", call_params.name))),
