@@ -133,4 +133,4 @@ To build public hype and grab the attention of tech leaders, post a high-signal 
 >
 > Let's make AI agent development fast, private, and deterministic.
 >
-> ⭐️ Star the repo: https://github.com/vishalkudmethe/neuron-core
+> ⭐️ Star the repo: https://github.com/vishalkudmethe/ai-neuron

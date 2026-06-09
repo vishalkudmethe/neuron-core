@@ -28,7 +28,7 @@ This action plan details the step-by-step roadmap for executing the launch of AI
 
 ### 1. Hacker News (Show HN)
 *   **Submission Title:** `Show HN: AI-NEURON – Local-first SQLite context engine for AI coding agents`
-*   **Link:** `https://ai-neuron.org` (or directly to the GitHub repo `https://github.com/vishalkudmethe/neuron-core`)
+*   **Link:** `https://ai-neuron.org` (or directly to the GitHub repo `https://github.com/vishalkudmethe/ai-neuron`)
 *   **Launch Time:** Target **8:00 AM EST (5:30 PM IST)** — this is the peak reading time for Hacker News.
 *   **Founder's Intro Comment (Post immediately after submitting):**
     > *“Hey HN,*
@@ -64,4 +64,4 @@ Email or submit to the following developer newsletters (they are always looking 
 ## Day 6+: Community Feedback Loop & Star Retention
 
 *   **Fast Response:** Monitor GitHub Issues and pull requests daily. Merging community PRs quickly builds massive goodwill and turns users into active project advocates.
-*   **Star Counter:** Track the daily growth velocity of `https://github.com/vishalkudmethe/neuron-core`.
+*   **Star Counter:** Track the daily growth velocity of `https://github.com/vishalkudmethe/ai-neuron`.
