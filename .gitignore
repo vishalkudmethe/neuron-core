@@ -17,3 +17,5 @@ Thumbs.db
 # Firebase cache
 .firebase/
 
+# Binary downloads (large files)
+downloads/
