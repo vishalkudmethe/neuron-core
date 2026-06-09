@@ -67,7 +67,6 @@ struct GetUserContextArgs {
     llm: Option<String>,
 }
 
-<<<<<<< HEAD
 #[derive(Debug, Deserialize)]
 struct PushToMasterBrainArgs {
     title: String,
@@ -85,11 +84,6 @@ struct QueryMasterBrainArgs {
 pub async fn run_mcp_server(project_root: &Path) -> Result<()> {
     eprintln!("  [MCP] Starting Model Context Protocol (MCP) server over stdio...");
     eprintln!("  [MCP] Exposing tools: get_project_context, search_symbols, get_impact_graph, get_symbol_info, get_file_content, get_user_context, push_to_master_brain, query_master_brain");
-=======
-pub async fn run_mcp_server(project_root: &Path) -> Result<()> {
-    eprintln!("  [MCP] Starting Model Context Protocol (MCP) server over stdio...");
-    eprintln!("  [MCP] Exposing tools: get_project_context, search_symbols, get_impact_graph, get_symbol_info, get_file_content, get_user_context");
->>>>>>> origin/main
 
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin).lines();
