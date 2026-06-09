@@ -345,3 +345,54 @@ pub async fn run_audit_cli(export: Option<&str>, tail: Option<usize>, clear: boo
 
     Ok(())
 }
+
+// ─── Tests ────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_cryptographic_hash_chain() {
+        let mut entry1 = AuditEntry {
+            id: "evt-001".to_string(),
+            timestamp: "2026-06-09T12:00:00Z".to_string(),
+            session_id: "sess-001".to_string(),
+            tool: "search_symbols".to_string(),
+            params: json!({"query": "audit"}),
+            response_bytes: 120,
+            duration_ms: 45,
+            project: "/tmp/project".to_string(),
+            previous_hash: "0".repeat(64),
+            hash: String::new(),
+        };
+        entry1.hash = entry1.calculate_hash();
+
+        let mut entry2 = AuditEntry {
+            id: "evt-002".to_string(),
+            timestamp: "2026-06-09T12:01:00Z".to_string(),
+            session_id: "sess-001".to_string(),
+            tool: "get_file_content".to_string(),
+            params: json!({"path": "src/main.rs"}),
+            response_bytes: 512,
+            duration_ms: 10,
+            project: "/tmp/project".to_string(),
+            previous_hash: entry1.hash.clone(),
+            hash: String::new(),
+        };
+        entry2.hash = entry2.calculate_hash();
+
+        // Verification validation
+        assert_eq!(entry1.previous_hash, "0".repeat(64));
+        assert_eq!(entry2.previous_hash, entry1.hash);
+
+        // Check if tampering is detected if we change a field in entry1
+        let mut tampered_entry1 = entry1.clone();
+        tampered_entry1.project = "/tmp/tampered_path".to_string();
+        
+        // The hash of tampered_entry1 calculated fresh will not match its original hash
+        assert_ne!(tampered_entry1.calculate_hash(), entry1.hash);
+    }
+}
+
