@@ -1,6 +1,6 @@
-# Project Neuron: Universal Persistent Memory Layer
+# AI-NEURON™: Universal Persistent Memory Layer
 
-Project Neuron is a high-performance, local-first utility designed to act as a **structural memory layer** and **context compiler** for AI coding agents (such as Claude Code, Cursor, Windsurf, and Copilot). It bridges the gap between raw codebase directories and the narrow, token-limited reasoning windows of modern LLMs.
+AI-NEURON™ is a high-performance, local-first utility designed to act as a **structural memory layer** and **context compiler** for AI coding agents (such as Claude Code, Cursor, Windsurf, and Copilot). It bridges the gap between raw codebase directories and the narrow, token-limited reasoning windows of modern LLMs.
 
 ---
 
@@ -49,6 +49,12 @@ Monitors rapid, repetitive file system modifications or repeated compilation err
 Supports profile parameters (`antigravity`, `claude`, `openai`) to shape context density:
 *   **Antigravity Profile**: High density, providing deeper file counts and symbol ranges.
 *   **Claude/OpenAI Profiles**: Compressed, shallow bounds optimized for cost-efficient token footprints.
+
+### 🛡️ Enterprise Audit Trail (`neuron audit`)
+A tamper-evident JSONL audit logging engine that logs every MCP tool execution to `~/.neuron/audit.log` (SOC 2 and GDPR compliant). It tracks UUID, timestamps, session duration, project paths, and parameters, but redacts content payloads to guarantee corporate security.
+
+### 🧠 AI-Neuron Sessions™ Identity Ledger (`neuron sessions`)
+An identity-preservation system designed to solve LLM cross-tab context bleeding and cold-start personalization. Stores user behavioral profiles, episodic memory (with priority weighting), goals, and active tabs in a local SQLite database, generating a token-efficient context injection block (`get_user_context`) for the active workspace.
 
 ### 🧹 Auto-Self-Healing & Maintenance
 Includes native cleanup capabilities (`neuron cleanup`) which vacuums and optimizes SQLite databases, rotates system intent logs, and clears stale locks automatically to ensure the binary runs with zero overhead (~10MB footprint).

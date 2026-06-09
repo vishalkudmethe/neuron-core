@@ -1,21 +1,26 @@
 [package]
-name        = "neuron"
+name        = "ai-neuron"
 version     = "1.0.0"
 edition     = "2021"
 authors     = ["AI Neuron Project"]
 description = "Universal Persistent Memory Layer for AI Coding Agents — v5 Multi-Project"
-license     = "MIT"
+license     = "AGPL-3.0-only"
 repository  = "https://github.com/ai-neuron/neuron"
 keywords    = ["ai", "memory", "context", "agents", "persistence"]
 categories  = ["command-line-utilities", "development-tools"]
 
 [[bin]]
-name = "neuron"
+name = "ai-neuron"
 path = "src/main.rs"
 
 [dependencies]
 # ── Async runtime ────────────────────────────────────────────────────────────
 tokio       = { version = "1", features = ["full"] }
+
+# ── HTTP / REST API (Portal server) ──────────────────────────────────────────
+axum        = { version = "0.7", features = ["json"] }
+tower-http  = { version = "0.5", features = ["cors", "fs"] }
+tower       = "0.4"
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 clap        = { version = "4", features = ["derive", "color", "env"] }

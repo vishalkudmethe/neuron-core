@@ -1,4 +1,4 @@
-# Neuron — Universal Persistent Memory Layer for AI Coding Agents
+# AI-NEURON™ — Universal Persistent Memory Layer for AI Coding Agents
 
 <div align="center">
 
@@ -14,7 +14,8 @@
 **v5 — Multi-Project Persistent Memory**
 
 [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange)](https://www.rust-lang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPLv3](https://img.shields.io/badge/License-AGPLv3-red.svg)](LICENSE)
+[![License: Commercial](https://img.shields.io/badge/License-Commercial-brightgreen.svg)](LICENSE-COMMERCIAL.md)
 
 </div>
 
@@ -32,7 +33,7 @@ Neuron is a persistent, portable memory layer for AI coding agents. It remembers
 
 **Neuron v5 adds:**
 - 🗂 **Multi-project support** — track unlimited projects simultaneously
-- ⚡ **Instant switching** — `neuron switch myproject` restores full context in <1s
+- ⚡ **Instant switching** — `ai-neuron switch myproject` restores full context in <1s
 - 🌍 **Global index** — `~/.neuron/global_index.sqlite` knows all your projects
 - 🔍 **Cross-project search** — find any symbol, decision, or conversation across all projects
 
@@ -46,19 +47,19 @@ cargo build --release
 
 # 2. Initialize a new project
 cd my-project
-neuron init
+ai-neuron init
 
 # 3. Start the watcher (real-time indexing)
-neuron watch
+ai-neuron watch
 
 # 4. After any directory change, restore context instantly
-neuron restore
+ai-neuron restore
 
 # 5. See all your projects
-neuron list
+ai-neuron list
 
 # 6. Switch to another project
-neuron switch my-other-project
+ai-neuron switch my-other-project
 ```
 
 ---
@@ -67,17 +68,17 @@ neuron switch my-other-project
 
 | Command | Description |
 |---------|-------------|
-| `neuron init` | Initialize `.neuron/` in current dir + register globally |
-| `neuron watch` | Start real-time file + git watcher daemon |
-| `neuron restore` | Auto-detect nearest `.neuron/` (upward search) + load context |
-| `neuron switch <name\|path>` | Switch to another project by name or path |
-| `neuron list` | Show all known projects |
-| `neuron search <query>` | Full-text search across current project memory |
-| `neuron search -g <query>` | Full-text search across ALL known projects |
-| `neuron snapshot` | Force-save session snapshot to `conversations/` |
-| `neuron status` | Show project state, memory count, git branch |
-| `neuron backup` | Manually backup `.neuron/` |
-| `neuron export` | Export `.neuron/` as portable archive |
+| `ai-neuron init` | Initialize `.neuron/` in current dir + register globally |
+| `ai-neuron watch` | Start real-time file + git watcher daemon |
+| `ai-neuron restore` | Auto-detect nearest `.neuron/` (upward search) + load context |
+| `ai-neuron switch <name\|path>` | Switch to another project by name or path |
+| `ai-neuron list` | Show all known projects |
+| `ai-neuron search <query>` | Full-text search across current project memory |
+| `ai-neuron search -g <query>` | Full-text search across ALL known projects |
+| `ai-neuron snapshot` | Force-save session snapshot to `conversations/` |
+| `ai-neuron status` | Show project state, memory count, git branch |
+| `ai-neuron backup` | Manually backup `.neuron/` |
+| `ai-neuron export` | Export `.neuron/` as portable archive |
 
 ---
 
@@ -181,10 +182,10 @@ Neuron actively prevents agent context loops. The Loop Guardian monitors a slidi
 
 ```bash
 # On machine A
-neuron export          # or just copy .neuron/ manually
+ai-neuron export          # or just copy .neuron/ manually
 
 # On machine B (in the new project root)
-neuron restore         # detects .neuron/, registers path alias, restores context
+ai-neuron restore         # detects .neuron/, registers path alias, restores context
 ```
 
 ---
@@ -209,6 +210,17 @@ neuron restore         # detects .neuron/, registers path alias, restores contex
 - **git2** — git integration
 - **clap** — CLI
 - **colored** / **tabled** — terminal UI
+
+---
+
+## Licensing
+
+AI-NEURON is dual-licensed under the **GNU Affero General Public License (AGPLv3)** and a **Commercial Enterprise License**.
+
+- **Open Source:** For personal use, educational use, and open-source projects, AI-NEURON is free under the terms of the [AGPLv3](LICENSE).
+- **Commercial Use:** If you are embedding AI-NEURON inside closed-source proprietary software, shipping it within enterprise environments, or integrating it in OEM products, you must purchase a commercial license. See [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) for details.
+
+For commercial inquiries, custom integrations, or SLAs, contact us at: **enterprise@ai-neuron.org**
 
 ---
 

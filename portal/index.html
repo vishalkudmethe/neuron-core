@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-NEURON™ Portal — Developer & Enterprise Management</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#090D16',
+                        darkPanel: '#0F172A',
+                        cyanAccent: '#06B6D4',
+                        cyanMuted: '#0891B2',
+                        violetAccent: '#8B5CF6',
+                        violetMuted: '#7C3AED',
+                        grayMuted: '#94A3B8'
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'Fira Code', 'Courier New', 'monospace'],
+                        sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans h-full flex flex-col selection:bg-cyanAccent/30 selection:text-white">
+    <!-- Top Decorative Line -->
+    <div class="h-[3px] w-full bg-gradient-to-r from-cyanAccent via-purple-500 to-violetAccent"></div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="flex-1 flex flex-col">
+        <!-- Header -->
+        <header class="border-b border-slate-800 bg-darkPanel/50 backdrop-blur-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyanAccent to-violetAccent p-[2px]">
+                        <div class="w-full h-full bg-darkBg rounded-lg flex items-center justify-center">
+                            <span class="font-mono text-lg font-black text-white tracking-tighter">AI</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-base font-extrabold tracking-wider text-white">AI-NEURON™</span>
+                            <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-cyanAccent/10 text-cyanAccent border border-cyanAccent/20 uppercase tracking-widest font-bold">Portal</span>
+                        </div>
+                        <p class="text-[10px] text-grayMuted uppercase font-mono tracking-widest">Multi-Agent Memory Layer</p>
+                    </div>
+                </div>
+
+                <!-- Session / Account details -->
+                <div id="user-display-badge" class="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/50">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span id="badge-name" class="font-mono text-xs text-slate-300">Syncing Local Memory...</span>
+                    <span id="badge-role" class="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-cyanAccent/10 text-cyanAccent border border-cyanAccent/10">Active</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- GATEWAY SCREEN (Login / Select Realm) -->
+        <div id="gateway-screen" class="flex-1 flex items-center justify-center px-4 py-16">
+            <div class="max-w-4xl w-full">
+                <div class="text-center mb-12">
+                    <h1 class="text-3xl sm:text-4xl font-mono font-extrabold tracking-tight text-white">
+                        AI-NEURON™ Control Portal
+                    </h1>
+                    <p class="text-grayMuted mt-3 max-w-lg mx-auto text-sm">
+                        Access local persistent memory context indices, cross-agent briefing logs, or monitor team workspaces and SOC-2 compliance.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+                    <!-- Developer Login Card -->
+                    <div class="relative group rounded-2xl border border-cyanMuted/30 bg-darkPanel/40 p-8 flex flex-col justify-between hover:border-cyanAccent transition-all duration-300 shadow-xl overflow-hidden">
+                        <div class="absolute -right-20 -top-20 w-40 h-40 bg-cyanAccent/10 rounded-full blur-3xl group-hover:bg-cyanAccent/20 transition-all"></div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-cyanAccent/10 border border-cyanAccent/30 flex items-center justify-center text-cyanAccent mb-6">
+                                <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-mono font-bold text-white mb-2">Developer Brain</h3>
+                            <p class="text-xs text-grayMuted leading-relaxed mb-6">
+                                Port architectural context, FTS5 memory units, and cross-project knowledge between agents (Cursor, Claude, Grok) or across development machines.
+                            </p>
+                            <div class="space-y-2 mb-8 text-[11px] font-mono text-slate-400">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i>
+                                    <span>Cross-agent briefing vault</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i>
+                                    <span>Multi-PC memory synchronization</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent"></i>
+                                    <span>Indexed code syntax symbols</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="openLoginModal('dev')" class="w-full py-3 px-4 rounded-xl bg-cyanAccent hover:bg-cyanMuted text-darkBg font-bold font-mono text-sm tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                            ENTER DEVELOPER REALM
+                        </button>
+                    </div>
+
+                    <!-- Enterprise Admin Login Card -->
+                    <div class="relative group rounded-2xl border border-violet-500/30 bg-darkPanel/40 p-8 flex flex-col justify-between hover:border-violetAccent transition-all duration-300 shadow-xl overflow-hidden">
+                        <div class="absolute -right-20 -top-20 w-40 h-40 bg-violetAccent/10 rounded-full blur-3xl group-hover:bg-violetAccent/20 transition-all"></div>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-violetAccent/10 border border-violet-500/30 flex items-center justify-center text-violetAccent mb-6">
+                                <i data-lucide="shield-check" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-mono font-bold text-white mb-2">Enterprise Admin</h3>
+                            <p class="text-xs text-grayMuted leading-relaxed mb-6">
+                                Manage license allocation, configure cloud/containerized endpoints, retrieve tamper-evident logs, and audit data sanitization logs.
+                            </p>
+                            <div class="space-y-2 mb-8 text-[11px] font-mono text-slate-400">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-violetAccent"></i>
+                                    <span>Team seats & seat tracking</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-violetAccent"></i>
+                                    <span>GDPR/SOC-2 tamper-evident logs</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-violetAccent"></i>
+                                    <span>Cloud pipeline control metrics</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="openLoginModal('admin')" class="w-full py-3 px-4 rounded-xl bg-violetAccent hover:bg-violetMuted text-white font-bold font-mono text-sm tracking-wider transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                            ENTER ADMIN REALM
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTHENTICATION & Federated SSO MODAL -->
+        <div id="login-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-darkBg/80 backdrop-blur-md px-4">
+            <div class="bg-darkPanel border border-slate-800 max-w-md w-full rounded-2xl p-8 shadow-2xl relative">
+                <!-- Close Button -->
+                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-grayMuted hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+
+                <div class="text-center mb-6">
+                    <div id="login-icon-box" class="w-12 h-12 rounded-xl mx-auto flex items-center justify-center mb-4">
+                        <!-- Dynamic Lucide Icon -->
+                    </div>
+                    <h3 id="login-modal-title" class="text-lg font-mono font-bold text-white">Sign In to AI-NEURON™</h3>
+                    <p class="text-xs text-grayMuted mt-1">Provide credentials or SSO to access the memory cluster control panel.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Email field -->
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-mono text-slate-400 uppercase">Work or Developer Email</label>
+                        <input id="login-email" type="email" placeholder="you@company.com" oninput="checkSsoLoginOnInput()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent">
+                    </div>
+
+                    <!-- Password field (hidden/disabled if corporate SSO detected) -->
+                    <div id="login-password-wrapper" class="space-y-1">
+                        <label class="block text-[10px] font-mono text-slate-400 uppercase">Password</label>
+                        <input id="login-password" type="password" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent">
+                    </div>
+
+                    <!-- SSO Detection Notice -->
+                    <div id="login-sso-notice" class="hidden border border-violet-500/20 bg-violet-500/5 rounded-xl p-3 text-[10px] font-mono text-violetAccent flex items-start gap-2">
+                        <i data-lucide="shield-check" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+                        <div>
+                            <span class="font-bold uppercase block">Enterprise Realm Detected</span>
+                            <span class="text-slate-400">Your domain is governed by federated SSO. Password authentication is disabled.</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button id="login-action-btn" onclick="submitLogin()" class="w-full py-3 rounded-xl font-bold font-mono text-xs uppercase tracking-wider transition-all">
+                        SIGN IN
+                    </button>
+
+                    <!-- OAuth Divider -->
+                    <div id="login-oauth-divider" class="flex items-center justify-between gap-3 my-4">
+                        <div class="h-[1px] bg-slate-800 flex-1"></div>
+                        <span class="text-[9px] font-mono text-grayMuted uppercase">or continue with</span>
+                        <div class="h-[1px] bg-slate-800 flex-1"></div>
+                    </div>
+
+                    <!-- OAuth Buttons -->
+                    <div id="login-oauth-grid" class="grid grid-cols-2 gap-3">
+                        <button onclick="simulateOAuth('Google')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-slate-900 text-slate-300 font-mono text-xs transition-colors">
+                            <i data-lucide="chrome" class="w-4 h-4"></i>
+                            Google
+                        </button>
+                        <button onclick="simulateOAuth('GitHub')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-slate-900 text-slate-300 font-mono text-xs transition-colors">
+                            <i data-lucide="github" class="w-4 h-4"></i>
+                            GitHub
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN DASHBOARD CONTENT -->
+        <div id="dashboard-screen" class="hidden flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-6">
+            <!-- Breadcrumbs / Back navigation -->
+            <div class="flex items-center justify-between">
+                <button onclick="exitToGateway()" class="flex items-center gap-2 text-xs font-mono text-grayMuted hover:text-white transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Back to Control Center
+                </button>
+                <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-1">
+                    <button id="tab-toggle-dev" onclick="switchRealm('dev')" class="px-3 py-1 text-xs font-mono rounded-md font-bold transition-all">Developer Dashboard</button>
+                    <button id="tab-toggle-admin" onclick="switchRealm('admin')" class="px-3 py-1 text-xs font-mono rounded-md font-bold transition-all">Enterprise Admin</button>
+                </div>
+            </div>
+
+            <!-- DEV REALM DASHBOARD -->
+            <div id="dev-realm-view" class="hidden space-y-6">
+                <!-- Overview Stats Grid -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">Indexed Projects</span>
+                        <span id="dev-stat-projects" class="text-2xl sm:text-3xl font-mono font-bold text-white block mt-1">--</span>
+                        <div class="absolute right-4 bottom-4 text-cyanAccent/10">
+                            <i data-lucide="folder-git" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">Identified Sessions</span>
+                        <span id="dev-stat-sessions" class="text-2xl sm:text-3xl font-mono font-bold text-white block mt-1">--</span>
+                        <div class="absolute right-4 bottom-4 text-cyanAccent/10">
+                            <i data-lucide="history" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">Active Devices</span>
+                        <span id="dev-stat-machines" class="text-2xl sm:text-3xl font-mono font-bold text-white block mt-1">--</span>
+                        <div class="absolute right-4 bottom-4 text-cyanAccent/10">
+                            <i data-lucide="laptop" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">Memory Units</span>
+                        <span id="dev-stat-units" class="text-2xl sm:text-3xl font-mono font-bold text-white block mt-1">--</span>
+                        <div class="absolute right-4 bottom-4 text-cyanAccent/10">
+                            <i data-lucide="database" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects List & Context Export Panel -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left: Projects List -->
+                    <div class="lg:col-span-2 bg-darkPanel/40 border border-slate-800 rounded-xl p-6 flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="text-lg font-mono font-bold text-white">Project Workspaces</h3>
+                                <p class="text-xs text-grayMuted">Track indexed workspaces and agent interactions.</p>
+                            </div>
+                            <!-- Search Bar -->
+                            <div class="relative max-w-xs w-full">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                                    <i data-lucide="search" class="w-4 h-4"></i>
+                                </span>
+                                <input type="text" id="project-search" oninput="filterProjects()" placeholder="Search project tags/names..." class="w-full pl-9 pr-4 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs focus:outline-none focus:border-cyanAccent transition-colors">
+                            </div>
+                        </div>
+
+                        <!-- Projects Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[11px] font-mono text-grayMuted uppercase tracking-wider">
+                                        <th class="py-3 px-4">Name</th>
+                                        <th class="py-3 px-4">Language</th>
+                                        <th class="py-3 px-4">Path</th>
+                                        <th class="py-3 px-4">Last Synced</th>
+                                        <th class="py-3 px-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projects-table-body" class="text-xs font-mono divide-y divide-slate-800/50">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right: Developer Brain Briefing / Context Box -->
+                    <div class="bg-darkPanel/40 border border-slate-800 rounded-xl p-6 flex flex-col gap-5">
+                        <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+                            <div class="w-9 h-9 rounded-lg bg-cyanAccent/10 border border-cyanAccent/20 flex items-center justify-center text-cyanAccent">
+                                <i data-lucide="pocket" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-mono font-bold text-white">AI-Neuron Context Box</h3>
+                                <p class="text-[10px] text-grayMuted">Export workspace briefs to swap agents.</p>
+                            </div>
+                        </div>
+
+                        <!-- Context Data Display -->
+                        <div id="context-box-placeholder" class="flex-1 flex flex-col items-center justify-center text-center py-12 text-slate-500">
+                            <i data-lucide="arrow-left-right" class="w-8 h-8 mb-2 opacity-50"></i>
+                            <p class="text-xs font-mono">Select a project to inspect context or generate migration briefs.</p>
+                        </div>
+
+                        <div id="context-box-content" class="hidden flex-1 flex flex-col gap-4">
+                            <div>
+                                <span id="context-project-name" class="text-base font-mono font-bold text-cyanAccent">Project Name</span>
+                                <span id="context-project-id" class="text-[10px] text-grayMuted block mt-0.5">ID: --</span>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-[10px] font-mono text-grayMuted uppercase tracking-wider block">Context Summary</span>
+                                    <p id="context-brief" class="text-[11px] text-slate-300 leading-relaxed bg-slate-900/50 border border-slate-800 p-2.5 rounded-lg mt-1 font-sans">---</p>
+                                </div>
+
+                                <div>
+                                    <span class="text-[10px] font-mono text-grayMuted uppercase tracking-wider block">Agent Engagement Log</span>
+                                    <div id="context-agents-list" class="space-y-1.5 mt-1.5">
+                                        <!-- Dynamic Agent history list -->
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="text-[10px] font-mono text-grayMuted uppercase tracking-wider block">Key Decisions (Episodic Memory)</span>
+                                    <ul id="context-decisions" class="list-disc pl-4 space-y-1 mt-1 text-[11px] text-slate-400">
+                                        <!-- Dynamic decisions -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto pt-4 border-t border-slate-800 flex gap-2">
+                                <button onclick="copyBrief()" class="flex-1 py-2 px-3 rounded-lg bg-cyanAccent/10 border border-cyanAccent/20 hover:bg-cyanAccent/20 text-cyanAccent font-mono text-[11px] font-bold tracking-wider transition-colors flex items-center justify-center gap-1.5">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    COPY BRIEF
+                                </button>
+                                <button onclick="exportBrief()" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-[11px] font-bold transition-colors">
+                                    EXPORT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sync Cluster Section -->
+                <div class="bg-darkPanel/30 border border-slate-800 rounded-xl p-6">
+                    <h3 class="text-sm font-mono font-bold text-white mb-4">Linked Synced Workspace Network</h3>
+                    <div id="machines-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamic Sync Nodes/PCs -->
+                    </div>
+                </div>
+
+                <!-- Hub Management: Master Brain Registry -->
+                <div class="bg-darkPanel/30 border border-cyanAccent/10 rounded-xl p-6 flex flex-col gap-5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-cyanAccent/10 border border-cyanAccent/20 flex items-center justify-center text-cyanAccent">
+                                <i data-lucide="network" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-mono font-bold text-white">Corporate Master Brain Registry</h3>
+                                <p class="text-[10px] text-grayMuted">Hub-and-Spoke topology: register a company Master Brain to sync sanitized milestones.</p>
+                            </div>
+                        </div>
+                        <button onclick="loadHubs()" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300 font-mono text-[10px] transition-colors flex items-center gap-1.5">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            REFRESH
+                        </button>
+                    </div>
+
+                    <!-- Registered Hubs List -->
+                    <div id="hubs-list" class="space-y-2"></div>
+
+                    <!-- Register New Hub Form -->
+                    <div class="border border-dashed border-cyanAccent/20 rounded-xl p-4 space-y-3 bg-cyanAccent/5">
+                        <p class="text-[11px] font-mono font-bold text-cyanAccent uppercase tracking-wider">Register New Corporate Hub</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input id="hub-domain" type="text" placeholder="Domain (e.g. corp.ai-neuron.org)" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent">
+                            <input id="hub-endpoint" type="text" placeholder="Endpoint URL (https://...)" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent">
+                            <input id="hub-token" type="password" placeholder="Access Token" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent">
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="registerHub()" class="px-4 py-2 rounded-lg bg-cyanAccent hover:bg-cyanMuted text-darkBg text-xs font-mono font-bold transition-colors">
+                                REGISTER HUB
+                            </button>
+                            <span id="hub-message" class="text-[10px] font-mono self-center"></span>
+                        </div>
+                    </div>
+
+                    <!-- Push Milestone / Sync Memory -->
+                    <div class="border border-slate-800 rounded-xl p-4 space-y-3">
+                        <p class="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider">Contribute Child Brain Milestone → Master Brain</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="sync-title" type="text" placeholder="Milestone title (e.g. Switched to Axum from Actix)" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent">
+                            <input id="sync-author" type="text" placeholder="Author (your username or email)" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent">
+                        </div>
+                        <textarea id="sync-content" rows="3" placeholder="Decision context, code rationale, or architecture notes... (credentials auto-sanitized)" class="w-full px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyanAccent resize-none"></textarea>
+                        <div class="flex gap-2">
+                            <button onclick="syncMilestone()" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-mono font-bold transition-colors flex items-center gap-1.5">
+                                <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                                SYNC TO MASTER BRAIN
+                            </button>
+                            <span id="sync-message" class="text-[10px] font-mono self-center"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENTERPRISE ADMIN DASHBOARD -->
+            <div id="admin-realm-view" class="hidden space-y-6">
+                <!-- Overview Stats Grid -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">License Status</span>
+                        <span id="admin-stat-license" class="text-lg font-mono font-bold text-white block mt-2 truncate">--</span>
+                        <div class="absolute right-4 bottom-4 text-violetAccent/10">
+                            <i data-lucide="key-round" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">Active Seats</span>
+                        <span id="admin-stat-seats" class="text-2xl sm:text-3xl font-mono font-bold text-white block mt-1">--</span>
+                        <div class="absolute right-4 bottom-4 text-violetAccent/10">
+                            <i data-lucide="users" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">Audit Events</span>
+                        <span id="admin-stat-audit" class="text-2xl sm:text-3xl font-mono font-bold text-white block mt-1">--</span>
+                        <div class="absolute right-4 bottom-4 text-violetAccent/10">
+                            <i data-lucide="list-collapse" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                    <div class="bg-darkPanel/50 border border-slate-800 rounded-xl p-5 relative overflow-hidden">
+                        <span class="text-xs font-mono text-grayMuted uppercase tracking-wider block">Active Node Deployments</span>
+                        <span id="admin-stat-deployments" class="text-2xl sm:text-3xl font-mono font-bold text-white block mt-1">--</span>
+                        <div class="absolute right-4 bottom-4 text-violetAccent/10">
+                            <i data-lucide="container" class="w-12 h-12"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- License Info & Audit Trail -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left: License registration status -->
+                    <div class="bg-darkPanel/40 border border-slate-800 rounded-xl p-6 flex flex-col gap-4">
+                        <h3 class="text-sm font-mono font-bold text-white">License Authentication</h3>
+                        
+                        <div id="license-card" class="border rounded-xl p-4 flex flex-col gap-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-mono text-grayMuted">Company Realm</span>
+                                <span id="license-company" class="text-xs font-mono text-white font-bold">--</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-mono text-grayMuted">License Expiry</span>
+                                <span id="license-expiry" class="text-xs font-mono text-white">--</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-mono text-grayMuted">Validation status</span>
+                                <span id="license-valid" class="px-2 py-0.5 text-[9px] font-mono rounded font-bold uppercase tracking-wider">--</span>
+                            </div>
+                        </div>
+
+                        <!-- Update License form -->
+                        <div class="mt-4 pt-4 border-t border-slate-800 space-y-3">
+                            <label class="text-xs font-mono text-slate-300 block">Register new Enterprise/Team License</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="license-key-input" placeholder="AINEURON-ENT-..." class="flex-1 px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-violetAccent">
+                                <button onclick="submitLicense()" class="px-4 py-2 rounded-lg bg-violetAccent hover:bg-violetMuted text-white text-xs font-mono font-bold transition-colors">
+                                    REGISTER
+                                </button>
+                            </div>
+                            <span id="license-message" class="text-[10px] font-mono block"></span>
+                        </div>
+                    </div>
+
+                    <!-- Right/Middle: Realtime Audit Trail -->
+                    <div class="lg:col-span-2 bg-darkPanel/40 border border-slate-800 rounded-xl p-6 flex flex-col gap-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-mono font-bold text-white">SOC-2 Tamper-Evident Audit Trail</h3>
+                                <p class="text-[10px] text-grayMuted">GDPR compliant tool-execution audit logs.</p>
+                            </div>
+                            <button onclick="fetchAdminAudit()" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-slate-300 font-mono text-[10px] transition-colors flex items-center gap-1.5">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                REFRESH
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-[300px] overflow-y-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[10px] font-mono text-grayMuted uppercase tracking-wider sticky top-0 bg-darkPanel z-10">
+                                        <th class="py-2.5 px-3">Event ID</th>
+                                        <th class="py-2.5 px-3">Timestamp</th>
+                                        <th class="py-2.5 px-3">Tool</th>
+                                        <th class="py-2.5 px-3">Project Path</th>
+                                        <th class="py-2.5 px-3 text-right">Latency</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="audit-table-body" class="text-[11px] font-mono divide-y divide-slate-800/50">
+                                    <!-- Dynamic audit log items -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Container / Cloud Deployment Monitor -->
+                <div class="bg-darkPanel/30 border border-slate-800 rounded-xl p-6 flex flex-col gap-4">
+                    <div>
+                        <h3 class="text-sm font-mono font-bold text-white">Active Cloud-Native Deployment Nodes</h3>
+                        <p class="text-xs text-grayMuted">Status and port mappings for server-side Persistent Memory microservices.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="border border-slate-800 bg-slate-900/40 p-4 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                    <i data-lucide="container" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-mono font-bold text-white block">k8s-pod-ai-neuron-0</span>
+                                    <span class="text-[10px] text-grayMuted block mt-0.5">Port: 8080 | TCP Server</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 text-[9px] font-mono font-bold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ONLINE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seat Provisioning Panel -->
+                <div class="bg-darkPanel/30 border border-violet-500/10 rounded-xl p-6 flex flex-col gap-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-violetAccent/10 border border-violet-500/20 flex items-center justify-center text-violetAccent">
+                            <i data-lucide="user-plus" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-mono font-bold text-white">Team Seat Provisioning</h3>
+                            <p class="text-[10px] text-grayMuted">Add employees to your corporate AI-NEURON team. Each seat gets a scoped access token and Child Brain configuration.</p>
+                        </div>
+                    </div>
+
+                    <!-- SSO Email Check -->
+                    <div class="border border-slate-800 rounded-xl p-4 space-y-3 bg-slate-900/30">
+                        <p class="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider">SSO Domain Verification</p>
+                        <div class="flex gap-2">
+                            <input id="sso-email" type="email" placeholder="employee@corp.com" oninput="checkSsoOnInput()" class="flex-1 px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-violetAccent">
+                        </div>
+                        <div id="sso-result" class="text-[10px] font-mono hidden"></div>
+                    </div>
+
+                    <!-- Seat Provisioning Form -->
+                    <div class="border border-dashed border-violet-500/20 rounded-xl p-4 space-y-3 bg-violetAccent/5">
+                        <p class="text-[11px] font-mono font-bold text-violetAccent uppercase tracking-wider">Provision New Seat</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="seat-email" type="email" placeholder="Employee email" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-violetAccent">
+                            <select id="seat-role" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-200 text-xs font-mono focus:outline-none focus:border-violetAccent">
+                                <option value="developer">Developer (Child Brain access)</option>
+                                <option value="admin">Admin (Full console access)</option>
+                                <option value="readonly">Read-Only (Audit view only)</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="provisionSeat()" class="px-4 py-2 rounded-lg bg-violetAccent hover:bg-violetMuted text-white text-xs font-mono font-bold transition-colors">
+                                PROVISION SEAT
+                            </button>
+                            <span id="seat-message" class="text-[10px] font-mono self-center"></span>
+                        </div>
+                        <div id="seat-result" class="hidden border border-emerald-500/20 bg-emerald-500/5 rounded-lg p-3 space-y-1">
+                            <p class="text-[10px] font-mono text-emerald-400 font-bold">SEAT PROVISIONED</p>
+                            <p class="text-[10px] font-mono text-slate-400">Email: <span id="seat-result-email" class="text-white"></span></p>
+                            <p class="text-[10px] font-mono text-slate-400">Access Token: <span id="seat-result-token" class="text-cyanAccent font-bold"></span></p>
+                            <p class="text-[10px] font-mono text-slate-500">(Share this token securely via your company's credential vault)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script for Portal UI logic -->
+    <script>
+        const API_URL = ""; // Empty string for same-host routing
+        let projectsData = [];
+        let activeRealm = 'dev';
+        let isSsoActive = false;
+        let ssoRedirectUrl = null;
+
+        function openLoginModal(realm) {
+            activeRealm = realm;
+            const modal = document.getElementById('login-modal');
+            const iconBox = document.getElementById('login-icon-box');
+            const actionBtn = document.getElementById('login-action-btn');
+            const emailInput = document.getElementById('login-email');
+            
+            // Reset modal state
+            emailInput.value = "";
+            document.getElementById('login-password').value = "";
+            resetSsoState();
+            
+            // Adjust visual accents based on realm
+            if (realm === 'dev') {
+                iconBox.innerHTML = '<i data-lucide="brain-circuit" class="w-6 h-6"></i>';
+                iconBox.className = "w-12 h-12 rounded-xl mx-auto flex items-center justify-center mb-4 bg-cyanAccent/10 border border-cyanAccent/30 text-cyanAccent";
+                actionBtn.className = "w-full py-3 rounded-xl font-bold font-mono text-xs uppercase tracking-wider transition-all bg-cyanAccent hover:bg-cyanMuted text-darkBg shadow-[0_0_10px_rgba(6,182,212,0.2)]";
+                document.getElementById('login-modal-title').textContent = "Developer Session Sign In";
+            } else {
+                iconBox.innerHTML = '<i data-lucide="shield-check" class="w-6 h-6"></i>';
+                iconBox.className = "w-12 h-12 rounded-xl mx-auto flex items-center justify-center mb-4 bg-violetAccent/10 border border-violet-500/30 text-violetAccent";
+                actionBtn.className = "w-full py-3 rounded-xl font-bold font-mono text-xs uppercase tracking-wider transition-all bg-violetAccent hover:bg-violetMuted text-white shadow-[0_0_10px_rgba(139,92,246,0.2)]";
+                document.getElementById('login-modal-title').textContent = "Enterprise Admin Sign In";
+            }
+            
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+            emailInput.focus();
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        function resetSsoState() {
+            isSsoActive = false;
+            ssoRedirectUrl = null;
+            document.getElementById('login-password-wrapper').classList.remove('hidden');
+            document.getElementById('login-sso-notice').classList.add('hidden');
+            document.getElementById('login-oauth-divider').classList.remove('hidden');
+            document.getElementById('login-oauth-grid').classList.remove('hidden');
+            
+            const actionBtn = document.getElementById('login-action-btn');
+            actionBtn.textContent = "SIGN IN";
+            if (activeRealm === 'dev') {
+                actionBtn.className = "w-full py-3 rounded-xl font-bold font-mono text-xs uppercase tracking-wider transition-all bg-cyanAccent hover:bg-cyanMuted text-darkBg shadow-[0_0_10px_rgba(6,182,212,0.2)]";
+            } else {
+                actionBtn.className = "w-full py-3 rounded-xl font-bold font-mono text-xs uppercase tracking-wider transition-all bg-violetAccent hover:bg-violetMuted text-white shadow-[0_0_10px_rgba(139,92,246,0.2)]";
+            }
+        }
+
+        async function checkSsoLoginOnInput() {
+            const email = document.getElementById('login-email').value.trim();
+            if (!email.includes('@') || email.length < 5) {
+                resetSsoState();
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_URL}/api/v1/auth/sso/check?email=${encodeURIComponent(email)}`);
+                if (res.ok) {
+                    const apiRes = await res.json();
+                    if (apiRes.ok && apiRes.data.requires_sso) {
+                        isSsoActive = true;
+                        ssoRedirectUrl = apiRes.data.sso_provider_url;
+                        
+                        // Hide password and normal OAuth login methods
+                        document.getElementById('login-password-wrapper').classList.add('hidden');
+                        document.getElementById('login-oauth-divider').classList.add('hidden');
+                        document.getElementById('login-oauth-grid').classList.add('hidden');
+                        
+                        // Show SSO detection alert
+                        document.getElementById('login-sso-notice').classList.remove('hidden');
+                        
+                        // Set action button to SSO redirect style
+                        const actionBtn = document.getElementById('login-action-btn');
+                        actionBtn.textContent = "CONTINUE WITH SSO";
+                        actionBtn.className = "w-full py-3 rounded-xl font-bold font-mono text-xs uppercase tracking-wider transition-all bg-violetAccent hover:bg-violetMuted text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] animate-pulse";
+                        lucide.createIcons();
+                    } else {
+                        resetSsoState();
+                    }
+                }
+            } catch (e) {
+                console.warn("SSO backend verification failed. Running in standalone credentials mode.");
+            }
+        }
+
+        function submitLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            if (!email) {
+                alert("Please enter a valid email address.");
+                return;
+            }
+
+            if (isSsoActive) {
+                const ssoNotice = document.getElementById('login-sso-notice');
+                ssoNotice.innerHTML = `
+                    <i data-lucide="loader" class="w-4 h-4 mt-0.5 flex-shrink-0 animate-spin"></i>
+                    <div>
+                        <span class="font-bold uppercase block">Redirecting to Identity Provider</span>
+                        <span class="text-slate-400">Loading external authentication node...</span>
+                    </div>
+                `;
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    closeLoginModal();
+                    switchRealm(activeRealm);
+                }, 1200);
+            } else {
+                // Standalone password verification simulation
+                closeLoginModal();
+                switchRealm(activeRealm);
+            }
+        }
+
+        function simulateOAuth(provider) {
+            const actionBtn = document.getElementById('login-action-btn');
+            actionBtn.disabled = true;
+            actionBtn.textContent = `REDIRECTING TO ${provider.toUpperCase()}...`;
+            
+            setTimeout(() => {
+                actionBtn.disabled = false;
+                closeLoginModal();
+                switchRealm(activeRealm);
+            }, 1000);
+        }
+
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+            // Automatically scan status if backend is running
+            checkHealth();
+        });
+
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_URL}/api/v1/health`);
+                if (res.ok) {
+                    console.log("Portal API server connected!");
+                }
+            } catch (e) {
+                console.warn("Unable to reach backend Portal API. UI running in simulator mode.", e);
+                document.getElementById('badge-name').textContent = "Simulator Mode (No Backend)";
+                document.getElementById('badge-role').className = "font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/10";
+            }
+        }
+
+        function switchRealm(realm) {
+            activeRealm = realm;
+            document.getElementById('gateway-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+
+            // Set up views
+            const devView = document.getElementById('dev-realm-view');
+            const adminView = document.getElementById('admin-realm-view');
+            const tabDev = document.getElementById('tab-toggle-dev');
+            const tabAdmin = document.getElementById('tab-toggle-admin');
+
+            if (realm === 'dev') {
+                devView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+
+                tabDev.className = "px-3 py-1 text-xs font-mono rounded-md font-bold bg-cyanAccent text-darkBg shadow-[0_0_10px_rgba(6,182,212,0.2)]";
+                tabAdmin.className = "px-3 py-1 text-xs font-mono rounded-md font-bold text-grayMuted hover:text-white transition-colors";
+
+                document.getElementById('badge-name').textContent = "Developer Session Sync Active";
+                document.getElementById('badge-role').className = "font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-cyanAccent/10 text-cyanAccent border border-cyanAccent/10";
+                
+                fetchDevData();
+            } else {
+                devView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+
+                tabAdmin.className = "px-3 py-1 text-xs font-mono rounded-md font-bold bg-violetAccent text-white shadow-[0_0_10px_rgba(139,92,246,0.2)]";
+                tabDev.className = "px-3 py-1 text-xs font-mono rounded-md font-bold text-grayMuted hover:text-white transition-colors";
+
+                document.getElementById('badge-name').textContent = "Enterprise Security Audit Session";
+                document.getElementById('badge-role').className = "font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-violetAccent/10 text-violetAccent border border-violetAccent/10";
+
+                fetchAdminData();
+            }
+        }
+
+        function exitToGateway() {
+            document.getElementById('gateway-screen').classList.remove('hidden');
+            document.getElementById('dashboard-screen').classList.add('hidden');
+        }
+
+        // --- DEV DATA FETCHING ---
+        async function fetchDevData() {
+            try {
+                // Fetch stats
+                const statsRes = await fetch(`${API_URL}/api/v1/dev/stats`);
+                if (statsRes.ok) {
+                    const resJson = await statsRes.json();
+                    const s = resJson.data;
+                    document.getElementById('dev-stat-projects').textContent = s.total_projects;
+                    document.getElementById('dev-stat-sessions').textContent = s.total_sessions;
+                    document.getElementById('dev-stat-machines').textContent = s.total_machines;
+                    document.getElementById('dev-stat-units').textContent = s.total_memory_units;
+                }
+
+                // Fetch projects
+                const projRes = await fetch(`${API_URL}/api/v1/dev/projects`);
+                if (projRes.ok) {
+                    const resJson = await projRes.json();
+                    projectsData = resJson.data;
+                    renderProjects(projectsData);
+                }
+
+                // Fetch machines
+                const machRes = await fetch(`${API_URL}/api/v1/dev/machines`);
+                if (machRes.ok) {
+                    const resJson = await machRes.json();
+                    renderMachines(resJson.data);
+                }
+            } catch (e) {
+                // Simulator fallback if fetch fails
+                populateDevSimulator();
+            }
+        }
+
+        function renderProjects(projects) {
+            const body = document.getElementById('projects-table-body');
+            body.innerHTML = '';
+            projects.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/30 transition-colors border-b border-slate-800/30 cursor-pointer";
+                tr.onclick = () => selectProject(p.id, p.name);
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-white font-bold">${p.name}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px] uppercase font-bold">${p.language}</span></td>
+                    <td class="py-3 px-4 text-slate-400 font-mono text-[11px] truncate max-w-[200px]" title="${p.root_path}">${p.root_path}</td>
+                    <td class="py-3 px-4 text-slate-500">${formatDate(p.last_accessed)}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button class="py-1 px-2.5 rounded bg-cyanAccent/10 border border-cyanAccent/20 hover:bg-cyanAccent/20 text-cyanAccent text-[10px] font-bold">VIEW</button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function renderMachines(machines) {
+            const container = document.getElementById('machines-grid');
+            container.innerHTML = '';
+            machines.forEach(m => {
+                const card = document.createElement('div');
+                card.className = "border border-slate-800 bg-slate-900/40 p-4 rounded-xl flex items-center justify-between";
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-cyanAccent/10 border border-cyanAccent/20 flex items-center justify-center text-cyanAccent">
+                            <i data-lucide="laptop" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-mono font-bold text-white block">${m.hostname}</span>
+                            <span class="text-[10px] text-grayMuted block mt-0.5">${m.platform} &bull; ${m.projects_count} projects</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="px-2 py-0.5 text-[9px] font-mono font-bold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CONNECTED</span>
+                        <span class="text-[9px] text-gray-500 font-mono">${formatDate(m.last_sync)}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function filterProjects() {
+            const query = document.getElementById('project-search').value.toLowerCase();
+            const filtered = projectsData.filter(p => p.name.toLowerCase().includes(query) || p.language.toLowerCase().includes(query) || p.root_path.toLowerCase().includes(query));
+            renderProjects(filtered);
+        }
+
+        async function selectProject(id, name) {
+            document.getElementById('context-box-placeholder').classList.add('hidden');
+            const box = document.getElementById('context-box-content');
+            box.classList.remove('hidden');
+
+            document.getElementById('context-project-name').textContent = name;
+            document.getElementById('context-project-id').textContent = `ID: ${id}`;
+
+            try {
+                // Fetch context export
+                const res = await fetch(`${API_URL}/api/v1/dev/projects/${id}/context`);
+                if (res.ok) {
+                    const resJson = await res.json();
+                    const exportData = resJson.data;
+
+                    document.getElementById('context-brief').textContent = exportData.brief;
+                    
+                    // Decisions list
+                    const decList = document.getElementById('context-decisions');
+                    decList.innerHTML = '';
+                    exportData.architectural_decisions.forEach(d => {
+                        const li = document.createElement('li');
+                        li.textContent = d;
+                        decList.appendChild(li);
+                    });
+                }
+
+                // Fetch agents history
+                const agentRes = await fetch(`${API_URL}/api/v1/dev/projects/${id}/agents`);
+                if (agentRes.ok) {
+                    const resJson = await agentRes.json();
+                    const agents = resJson.data;
+                    renderAgentHistory(agents);
+                }
+            } catch (e) {
+                // Fallback to simulator
+                populateProjectContextSimulator(name);
+            }
+        }
+
+        function renderAgentHistory(agents) {
+            const list = document.getElementById('context-agents-list');
+            list.innerHTML = '';
+            agents.forEach(a => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between text-[11px] border border-slate-800 bg-slate-900/60 p-2 rounded-lg";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="bot" class="w-3.5 h-3.5 text-cyanAccent"></i>
+                        <span class="font-bold text-slate-300">${a.agent}</span>
+                    </div>
+                    <span class="text-slate-500 font-mono text-[10px]">${a.session_count} sessions</span>
+                `;
+                list.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        // --- ADMIN DATA FETCHING ---
+        async function fetchAdminData() {
+            try {
+                // Fetch stats
+                const statsRes = await fetch(`${API_URL}/api/v1/admin/stats`);
+                if (statsRes.ok) {
+                    const resJson = await statsRes.json();
+                    const s = resJson.data;
+                    document.getElementById('admin-stat-seats').textContent = `${s.active_seats} Seats`;
+                    document.getElementById('admin-stat-audit').textContent = s.audit_events_total;
+                    document.getElementById('admin-stat-deployments').textContent = s.deployments_online;
+                }
+
+                // Fetch license
+                const licRes = await fetch(`${API_URL}/api/v1/admin/license`);
+                if (licRes.ok) {
+                    const resJson = await licRes.json();
+                    const l = resJson.data;
+                    document.getElementById('admin-stat-license').textContent = l.tier;
+
+                    document.getElementById('license-company').textContent = l.company;
+                    document.getElementById('license-expiry').textContent = l.expiry;
+                    
+                    const validBadge = document.getElementById('license-valid');
+                    const card = document.getElementById('license-card');
+                    if (l.is_valid) {
+                        validBadge.textContent = "VERIFIED";
+                        validBadge.className = "px-2 py-0.5 text-[9px] font-mono rounded font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                        card.className = "border border-emerald-500/20 bg-emerald-500/5 rounded-xl p-4 flex flex-col gap-3";
+                    } else {
+                        validBadge.textContent = "COMMUNITY TIER";
+                        validBadge.className = "px-2 py-0.5 text-[9px] font-mono rounded font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-400 border border-yellow-500/20";
+                        card.className = "border border-slate-800 bg-slate-900/50 rounded-xl p-4 flex flex-col gap-3";
+                    }
+                }
+
+                // Fetch audit logs
+                fetchAdminAudit();
+            } catch (e) {
+                populateAdminSimulator();
+            }
+        }
+
+        async function fetchAdminAudit() {
+            try {
+                const auditRes = await fetch(`${API_URL}/api/v1/admin/audit?limit=25`);
+                if (auditRes.ok) {
+                    const resJson = await auditRes.json();
+                    renderAuditLogs(resJson.data);
+                }
+            } catch (e) {
+                console.warn("Unable to fetch audit logs, simulator mode.", e);
+            }
+        }
+
+        function renderAuditLogs(logs) {
+            const body = document.getElementById('audit-table-body');
+            body.innerHTML = '';
+
+            if (logs.length === 0) {
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-slate-500">No tools audit events captured yet. Run standard MCP queries first.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            logs.forEach(l => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/30 transition-colors border-b border-slate-800/30";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-violetAccent font-mono text-[10px] max-w-[80px] truncate" title="${l.id}">${l.id.substring(0,8)}...</td>
+                    <td class="py-2.5 px-3 text-slate-500">${formatDate(l.timestamp)}</td>
+                    <td class="py-2.5 px-3 text-white font-bold">${l.tool}</td>
+                    <td class="py-2.5 px-3 text-slate-400 font-mono text-[10px] max-w-[150px] truncate" title="${l.project_path}">${l.project_path}</td>
+                    <td class="py-2.5 px-3 text-right text-slate-400">${l.duration_ms}ms</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        async function submitLicense() {
+            const key = document.getElementById('license-key-input').value.trim();
+            const msg = document.getElementById('license-message');
+
+            if (!key) return;
+
+            try {
+                // Attempt standard register call
+                const res = await fetch(`${API_URL}/api/v1/admin/license`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key })
+                });
+
+                if (res.ok) {
+                    msg.className = "text-[10px] font-mono block text-emerald-400 mt-2";
+                    msg.textContent = "License validated and updated successfully!";
+                    fetchAdminData();
+                } else {
+                    msg.className = "text-[10px] font-mono block text-rose-400 mt-2";
+                    msg.textContent = "Error: Invalid cryptographic key prefix or check-sum signature.";
+                }
+            } catch (e) {
+                // Simulator validation mock
+                if (key.startsWith("AINEURON-ENT-")) {
+                    msg.className = "text-[10px] font-mono block text-emerald-400 mt-2";
+                    msg.textContent = "License validated successfully! (Simulator Mock)";
+                    document.getElementById('admin-stat-license').textContent = "Enterprise Team Realm";
+                    document.getElementById('license-company').textContent = "Sovereign Labs Inc.";
+                    document.getElementById('license-expiry').textContent = "2027-12-31";
+                } else {
+                    msg.className = "text-[10px] font-mono block text-rose-400 mt-2";
+                    msg.textContent = "Invalid license key format. Must prefix with 'AINEURON-ENT-'.";
+                }
+            }
+        }
+
+        function copyBrief() {
+            const briefText = document.getElementById('context-brief').textContent;
+            navigator.clipboard.writeText(briefText).then(() => {
+                alert("AI-Neuron migration brief copied to clipboard! Ready to paste to another agent.");
+            });
+        }
+
+        function exportBrief() {
+            const briefText = document.getElementById('context-brief').textContent;
+            const blob = new Blob([briefText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "aineuron-migration-brief.txt";
+            a.click();
+        }
+
+        // --- HUB MANAGEMENT ---
+        async function loadHubs() {
+            const container = document.getElementById('hubs-list');
+            try {
+                const res = await fetch(`${API_URL}/api/v1/dev/hubs`);
+                if (res.ok) {
+                    const resJson = await res.json();
+                    renderHubs(resJson.data);
+                }
+            } catch (e) {
+                renderHubs([{ id: 'hub-demo-01', domain: 'corp.ai-neuron.org', endpoint_url: 'https://brain.corp.ai-neuron.org/api/v1', active: true, created_at: '2026-06-09' }]);
+            }
+        }
+
+        function renderHubs(hubs) {
+            const container = document.getElementById('hubs-list');
+            container.innerHTML = '';
+            if (hubs.length === 0) {
+                container.innerHTML = '<p class="text-xs font-mono text-slate-500 text-center py-4">No Corporate Hubs registered yet. Register one below.</p>';
+                return;
+            }
+            hubs.forEach(h => {
+                const el = document.createElement('div');
+                el.className = 'flex items-center justify-between border border-slate-800 bg-slate-900/40 rounded-xl p-3';
+                el.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-cyanAccent/10 border border-cyanAccent/20 flex items-center justify-center text-cyanAccent">
+                            <i data-lucide="server" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-mono font-bold text-white block">${h.domain}</span>
+                            <span class="text-[10px] text-grayMuted block">${h.endpoint_url}</span>
+                        </div>
+                    </div>
+                    <span class="px-2 py-0.5 text-[9px] font-mono font-bold rounded ${h.active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500 border border-slate-700'}">${h.active ? 'ACTIVE' : 'INACTIVE'}</span>
+                `;
+                container.appendChild(el);
+            });
+            lucide.createIcons();
+        }
+
+        async function registerHub() {
+            const domain = document.getElementById('hub-domain').value.trim();
+            const endpoint = document.getElementById('hub-endpoint').value.trim();
+            const token = document.getElementById('hub-token').value.trim();
+            const msg = document.getElementById('hub-message');
+            if (!domain || !endpoint || !token) {
+                msg.className = 'text-[10px] font-mono self-center text-rose-400';
+                msg.textContent = 'All fields required.';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/api/v1/dev/hubs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domain, endpoint_url: endpoint, access_token: token })
+                });
+                if (res.ok) {
+                    msg.className = 'text-[10px] font-mono self-center text-emerald-400';
+                    msg.textContent = 'Hub registered successfully!';
+                    loadHubs();
+                } else {
+                    msg.className = 'text-[10px] font-mono self-center text-rose-400';
+                    msg.textContent = 'Registration failed.';
+                }
+            } catch (e) {
+                msg.className = 'text-[10px] font-mono self-center text-emerald-400';
+                msg.textContent = `Registered: ${domain} (Simulator)`;
+                renderHubs([{ id: 'hub-new', domain, endpoint_url: endpoint, active: true, created_at: new Date().toISOString() }]);
+            }
+        }
+
+        async function syncMilestone() {
+            const title = document.getElementById('sync-title').value.trim();
+            const author = document.getElementById('sync-author').value.trim();
+            const content = document.getElementById('sync-content').value.trim();
+            const msg = document.getElementById('sync-message');
+            if (!title || !content) {
+                msg.className = 'text-[10px] font-mono self-center text-rose-400';
+                msg.textContent = 'Title and content required.';
+                return;
+            }
+            msg.className = 'text-[10px] font-mono self-center text-slate-400';
+            msg.textContent = 'Sanitizing and syncing...';
+            try {
+                const res = await fetch(`${API_URL}/api/v1/dev/hubs/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hub_id: 'hub-default', local_episode_id: null, title, content, author: author || 'anonymous' })
+                });
+                if (res.ok) {
+                    const resJson = await res.json();
+                    msg.className = 'text-[10px] font-mono self-center text-emerald-400';
+                    msg.textContent = `Synced: ${resJson.data.synced_memory_id} (${resJson.data.sanitized_length} chars sanitized)`;
+                } else {
+                    msg.className = 'text-[10px] font-mono self-center text-rose-400';
+                    msg.textContent = 'Sync failed.';
+                }
+            } catch (e) {
+                msg.className = 'text-[10px] font-mono self-center text-emerald-400';
+                msg.textContent = `Synced to Master Brain (Simulator) — credentials auto-stripped.`;
+            }
+        }
+
+        // --- SEAT PROVISIONING & SSO ---
+        let ssoCheckTimeout = null;
+        function checkSsoOnInput() {
+            clearTimeout(ssoCheckTimeout);
+            ssoCheckTimeout = setTimeout(async () => {
+                const email = document.getElementById('sso-email').value.trim();
+                if (!email.includes('@')) return;
+                const resultEl = document.getElementById('sso-result');
+                try {
+                    const res = await fetch(`${API_URL}/api/v1/auth/sso/check?email=${encodeURIComponent(email)}`);
+                    if (res.ok) {
+                        const resJson = await res.json();
+                        const d = resJson.data;
+                        resultEl.classList.remove('hidden');
+                        if (d.requires_sso) {
+                            resultEl.className = 'text-[10px] font-mono text-emerald-400';
+                            resultEl.textContent = `✓ Corporate domain detected. SSO redirect: ${d.sso_provider_url}`;
+                        } else {
+                            resultEl.className = 'text-[10px] font-mono text-slate-400';
+                            resultEl.textContent = `Personal domain — Google/GitHub OAuth login applies.`;
+                        }
+                    }
+                } catch (e) {
+                    const domain = email.split('@')[1] || '';
+                    resultEl.classList.remove('hidden');
+                    resultEl.className = 'text-[10px] font-mono text-emerald-400';
+                    resultEl.textContent = `Corporate domain: ${domain} → SAML SSO login required (Simulator)`;
+                }
+            }, 600);
+        }
+
+        async function provisionSeat() {
+            const email = document.getElementById('seat-email').value.trim();
+            const role = document.getElementById('seat-role').value;
+            const msg = document.getElementById('seat-message');
+            if (!email) {
+                msg.className = 'text-[10px] font-mono self-center text-rose-400';
+                msg.textContent = 'Email required.';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/api/v1/admin/seats/provision`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, role })
+                });
+                if (res.ok) {
+                    const resJson = await res.json();
+                    const d = resJson.data;
+                    msg.textContent = '';
+                    document.getElementById('seat-result').classList.remove('hidden');
+                    document.getElementById('seat-result-email').textContent = d.email;
+                    document.getElementById('seat-result-token').textContent = d.access_token;
+                } else {
+                    msg.className = 'text-[10px] font-mono self-center text-rose-400';
+                    msg.textContent = 'Provisioning failed.';
+                }
+            } catch (e) {
+                const mockToken = `AINEURON-SEAT-${Math.random().toString(36).slice(2,8).toUpperCase()}-${role.toUpperCase()}`;
+                document.getElementById('seat-result').classList.remove('hidden');
+                document.getElementById('seat-result-email').textContent = email;
+                document.getElementById('seat-result-token').textContent = mockToken;
+                msg.textContent = '';
+            }
+        }
+
+        // --- SIMULATOR MOCKS ---
+        function populateDevSimulator() {
+            document.getElementById('dev-stat-projects').textContent = "4";
+            document.getElementById('dev-stat-sessions').textContent = "142";
+            document.getElementById('dev-stat-machines').textContent = "2";
+            document.getElementById('dev-stat-units').textContent = "4,821";
+
+            projectsData = [
+                { id: "p1", name: "ai-neuron", language: "rust", root_path: "D:\\AI Neuron", last_accessed: "2026-06-09T08:00:00Z" },
+                { id: "p2", name: "aetherflux", language: "rust", root_path: "D:\\Aetherflux", last_accessed: "2026-06-08T14:30:00Z" },
+                { id: "p3", name: "project-d", language: "typescript", root_path: "D:\\ProjectD", last_accessed: "2026-06-07T10:15:00Z" },
+                { id: "p4", name: "project-e", language: "python", root_path: "D:\\ProjectE", last_accessed: "2026-06-06T16:45:00Z" }
+            ];
+            renderProjects(projectsData);
+
+            const machines = [
+                { hostname: "dev-workstation-1", platform: "Windows 11 x86_64", projects_count: 3, last_sync: "2026-06-09T08:00:00Z" },
+                { hostname: "laptop-macbook", platform: "macOS Arm64", projects_count: 1, last_sync: "2026-06-08T18:30:00Z" }
+            ];
+            renderMachines(machines);
+        }
+
+        function populateProjectContextSimulator(name) {
+            document.getElementById('context-brief').textContent = `AI-NEURON™ active context brief for ${name}. Implements unified persistent memory storage to share workspace AST structures and session logs across agents. Ready to build, configure, or compile.`;
+            
+            const decisions = document.getElementById('context-decisions');
+            decisions.innerHTML = `
+                <li>Chose local SQLite database over external databases to maintain 100% developer sovereignty.</li>
+                <li>Designed strict inline regex pattern filters to prevent credential leakage.</li>
+            `;
+
+            renderAgentHistory([
+                { agent: "Antigravity", session_count: 84 },
+                { agent: "Claude Code", session_count: 58 }
+            ]);
+        }
+
+        function populateAdminSimulator() {
+            document.getElementById('admin-stat-license').textContent = "Community Tier";
+            document.getElementById('admin-stat-seats').textContent = "1 Seat";
+            document.getElementById('admin-stat-audit').textContent = "142";
+            document.getElementById('admin-stat-deployments').textContent = "1 Node";
+
+            document.getElementById('license-company').textContent = "Community User";
+            document.getElementById('license-expiry').textContent = "Never";
+            
+            const validBadge = document.getElementById('license-valid');
+            validBadge.textContent = "COMMUNITY TIER";
+            validBadge.className = "px-2 py-0.5 text-[9px] font-mono rounded font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-400 border border-yellow-500/20";
+
+            renderAuditLogs([
+                { id: "evt-001", timestamp: "2026-06-09T08:00:00Z", tool: "get_project_context", project_path: "D:\\AI Neuron", duration_ms: 124 },
+                { id: "evt-002", timestamp: "2026-06-09T07:45:00Z", tool: "search_symbols", project_path: "D:\\AI Neuron", duration_ms: 45 },
+                { id: "evt-003", timestamp: "2026-06-08T16:20:00Z", tool: "get_user_context", project_path: "D:\\Aetherflux", duration_ms: 82 }
+            ]);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr || dateStr === "Never") return dateStr;
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+    </script>
+</body>
+</html>

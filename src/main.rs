@@ -1,7 +1,8 @@
-//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v14)
+//! Neuron Platform — Universal Persistent Memory Layer for AI Coding Agents (v14)
 //! CLI entrypoint. All commands are dispatched from here.
 
 mod analyzer;
+mod audit;       // Enterprise audit logging engine
 mod bridge;
 mod cleanup;
 mod dedup;
@@ -10,6 +11,7 @@ mod conversation;
 mod dependency;
 mod git;
 mod graph;
+mod license;     // Enterprise licensing and key registration
 mod mcp;
 mod intent;
 mod loop_guard;
@@ -18,7 +20,10 @@ mod parser;
 mod project_manager;
 mod sanitize;
 mod search;
+mod server;      // TCP/IP MCP server for cloud/enterprise deployments
+mod portal_api;  // REST API server for Developer Brain + Admin Console portal
 mod session;
+mod sessions;    // Neuron Sessions™ — personal AI memory daemon
 mod stream;
 mod sync;
 mod utils;
@@ -33,16 +38,16 @@ use tracing_subscriber::{fmt, EnvFilter};
 
 #[derive(Parser)]
 #[command(
-    name    = "neuron",
+    name    = "ai-neuron",
     version = "1.0.0",
     author  = "AI Neuron Project",
     about   = "Universal Persistent Memory Layer for AI Coding Agents",
     long_about = r#"
-Neuron maintains complete, portable project memory (code, conversations,
+AI-NEURON maintains complete, portable project memory (code, conversations,
 decisions, architecture) that survives folder changes, restarts, logouts,
 account switches, and directory switches.
 
-Multi-project support: Neuron tracks ALL your projects globally and lets you
+Multi-project support: AI-NEURON tracks ALL your projects globally and lets you
 switch context instantly without losing memory.
 "#
 )]
@@ -57,7 +62,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Initialize a new Neuron project in the current directory
+    /// Initialize a new AI-NEURON project in the current directory
     Init {
         /// Project name (defaults to directory name)
         #[arg(short, long)]
@@ -231,6 +236,84 @@ enum Commands {
     /// Start native Model Context Protocol (MCP) server over stdin/stdout
     #[command(name = "start-mcp")]
     StartMcp,
+
+    /// Start Model Context Protocol (MCP) server over TCP socket (for cloud/enterprise deployment)
+    #[command(name = "start-server")]
+    StartServer {
+        /// TCP port to listen on (default: 8080)
+        #[arg(short, long, default_value = "8080")]
+        port: u16,
+    },
+
+    /// Start the AI-NEURON Developer Brain + Enterprise Admin Portal REST API server
+    #[command(name = "start-portal")]
+    StartPortal {
+        /// HTTP port to listen on (default: 9090)
+        #[arg(short, long, default_value = "9090")]
+        port: u16,
+    },
+
+    /// Register a commercial or enterprise license key
+    Register {
+        /// The cryptographic license key string (format: AINEURON-ENT-<COMPANY>-<EXPIRY>-<SIG>)
+        #[arg(index = 1)]
+        key: String,
+    },
+
+    /// Enterprise audit log — view, export, or clear MCP tool invocation records
+    Audit {
+        /// Export audit log to a JSON file
+        #[arg(short, long, value_name = "FILE")]
+        export: Option<String>,
+
+        /// Show only the last N entries
+        #[arg(short, long, value_name = "N")]
+        tail: Option<usize>,
+
+        /// Clear the audit log (irreversible)
+        #[arg(long)]
+        clear: bool,
+    },
+
+    /// Neuron Sessions™ — personal AI memory and cross-tab LLM coherence
+    #[command(name = "sessions")]
+    Sessions {
+        /// Initialize the sessions identity ledger
+        #[arg(long)]
+        init: bool,
+
+        /// Set a profile key/value (e.g. --set expertise_rust=expert)
+        #[arg(long, value_name = "KEY=VALUE")]
+        set: Option<String>,
+
+        /// Add an episodic memory event
+        #[arg(long, value_name = "SUMMARY")]
+        episode: Option<String>,
+
+        /// Importance score for the episode (1-10, default 5)
+        #[arg(long, default_value = "5")]
+        importance: i64,
+
+        /// Add an active goal
+        #[arg(long, value_name = "TITLE")]
+        goal: Option<String>,
+
+        /// Generate context injection block for this tab ID
+        #[arg(long, value_name = "TAB_ID")]
+        context: Option<String>,
+
+        /// Log/update an active LLM session tab (format: tab_id:topic:llm)
+        #[arg(long, value_name = "TAB:TOPIC:LLM")]
+        log: Option<String>,
+
+        /// Close/remove an active session tab
+        #[arg(long, value_name = "TAB_ID")]
+        close: Option<String>,
+
+        /// Show all sessions data (profile, goals, episodes, active tabs)
+        #[arg(long)]
+        show: bool,
+    },
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -250,7 +333,7 @@ async fn main() -> Result<()> {
         .with_target(false)
         .compact();
 
-    if matches!(cli.command, Commands::StartMcp) {
+    if matches!(cli.command, Commands::StartMcp | Commands::StartServer { .. } | Commands::StartPortal { .. }) {
         subscriber.with_writer(std::io::stderr).init();
     } else {
         subscriber.init();
@@ -422,6 +505,83 @@ async fn main() -> Result<()> {
             let neuron_root = project_manager::discover_project_root().await?;
             mcp::run_mcp_server(&neuron_root).await?;
         }
+
+        Commands::StartServer { port } => {
+            let neuron_root = project_manager::discover_project_root().await?;
+            eprintln!("[SERVER] Neuron MCP TCP Server initialising on port {}...", port);
+            server::start_mcp_tcp_server(&neuron_root, port).await?;
+        }
+
+        Commands::StartPortal { port } => {
+            println!("");
+            println!("  {} Starting AI-NEURON™ Portal API server...", "✦".cyan().bold());
+            portal_api::start_portal_server(port).await?;
+        }
+
+        Commands::Register { key } => {
+            match license::register_key(&key) {
+                Ok(info) => {
+                    println!(
+                        "  {} Enterprise License registered successfully!",
+                        "✓".green().bold()
+                    );
+                    println!("  Company  : {}", info.company.cyan().bold());
+                    println!("  Tier     : {}", info.tier.green());
+                    println!("  Expires  : {}", info.expiry.yellow());
+                    println!("  Stored at: ~/.neuron/license.key");
+                }
+                Err(e) => {
+                    println!(
+                        "  {} License registration failed: {}",
+                        "✗".red().bold(), e
+                    );
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        Commands::Audit { export, tail, clear } => {
+            audit::run_audit_cli(export.as_deref(), tail, clear).await?;
+        }
+
+        Commands::Sessions {
+            init, set, episode, importance, goal,
+            context, log, close, show,
+        } => {
+            use sessions::SessionsCmd;
+            let cmd = if init {
+                SessionsCmd::Init
+            } else if let Some(kv) = set {
+                let (k, v) = kv.split_once('=')
+                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .ok_or_else(|| anyhow::anyhow!("--set expects KEY=VALUE format"))?;
+                SessionsCmd::SetProfile { key: k, value: v }
+            } else if let Some(summary) = episode {
+                SessionsCmd::AddEpisode { summary, importance }
+            } else if let Some(title) = goal {
+                SessionsCmd::AddGoal { title }
+            } else if let Some(tab) = context {
+                SessionsCmd::Context { tab }
+            } else if let Some(raw) = log {
+                let parts: Vec<&str> = raw.splitn(3, ':').collect();
+                if parts.len() < 3 {
+                    return Err(anyhow::anyhow!("--log expects TAB_ID:TOPIC:LLM format"));
+                }
+                SessionsCmd::LogSession {
+                    tab: parts[0].to_string(),
+                    topic: parts[1].to_string(),
+                    llm: parts[2].to_string(),
+                }
+            } else if let Some(tab) = close {
+                SessionsCmd::CloseSession { tab }
+            } else if show {
+                SessionsCmd::Show
+            } else {
+                // Default: show
+                SessionsCmd::Show
+            };
+            sessions::run_sessions_cli(cmd).await?;
+        }
     }
 
     Ok(())
@@ -430,6 +590,13 @@ async fn main() -> Result<()> {
 // ─── Banner ───────────────────────────────────────────────────────────────────
 
 fn print_banner() {
+    let lic = license::get_active_license();
+    let (edition_label, edition_color) = if lic.tier.starts_with("Enterprise") {
+        (format!("Enterprise Edition — licensed to {}", lic.company), true)
+    } else {
+        ("Community Edition (AGPL-3.0)".to_string(), false)
+    };
+
     println!(
         "{}",
         r#"
@@ -444,9 +611,15 @@ fn print_banner() {
         .bold()
     );
     println!(
-        "  {} {}  {}\n",
-        "Universal Persistent Memory Layer".white().bold(),
-        "v14".bright_yellow().bold(),
+        "  {} {} {}  {}",
+        "AI-NEURON™".bright_cyan().bold(),
+        "— Universal Persistent Memory Layer".white().bold(),
+        "v17".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );
+    if edition_color {
+        println!("  {}\n", edition_label.green().bold());
+    } else {
+        println!("  {}\n", edition_label.dimmed());
+    }
 }

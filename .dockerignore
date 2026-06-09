@@ -1,0 +1,48 @@
+# AI-NEURON™ — Docker Build Exclusions
+# Keeps the build context lean — only Rust source and manifests are needed
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+
+# Git history
+.git/
+.gitignore
+.gitattributes
+
+# Local Neuron data directories (never ship index/audit/session data)
+.neuron/
+**/.neuron/
+
+# Agent/documentation directories
+.agent/
+docs/
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# GitHub Actions (not needed in image)
+.github/
+
+# Test and benchmark artifacts
+tests/
+benches/
+*.prof
+
+# Local environment overrides
+.env
+.env.*
+*.local
+
+# Markdown and web assets (not part of the binary)
+README.md
+*.md
+index.html
+CNAME
