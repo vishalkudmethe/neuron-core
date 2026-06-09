@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# AI-NEURON™  —  Docker Compose Stack
+# Pillar 3: Cloud-Native Enterprise Deployment
+#
+# Services:
+#   ai-neuron   →  TCP MCP Server (port 8080) with persistent memory volume
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f ai-neuron
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  ai-neuron:
+    image: ai-neuron:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-neuron-server
+    restart: unless-stopped
+
+    # TCP MCP server port — consumed by hosted LLM APIs
+    ports:
+      - "8080:8080"
+
+    volumes:
+      # Persistent .neuron/ data — index, audit logs, license key, sessions DB
+      - neuron-data:/root/.neuron
+      # Mount the enterprise codebase into /workspace
+      # Override with: WORKSPACE_PATH=/path/to/project docker compose up
+      - ${WORKSPACE_PATH:-./}:/workspace:ro
+
+    environment:
+      # Set to 1 to enable verbose debug output
+      - NEURON_LOG_LEVEL=${NEURON_LOG_LEVEL:-info}
+      # Enterprise license key (can also be registered via CLI after start)
+      - AINEURON_LICENSE_KEY=${AINEURON_LICENSE_KEY:-}
+
+    # Health check via status command
+    healthcheck:
+      test: ["CMD", "ai-neuron", "status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+    # Resource limits suitable for most enterprise single-node deployments
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 64M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  # Named volume — persists across container restarts and upgrades
+  neuron-data:
+    driver: local
