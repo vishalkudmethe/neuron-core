@@ -326,12 +326,78 @@
                 <i data-lucide="shield-check" class="w-8 h-8 text-cyanAccent mb-2"></i>
                 <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Secure Payload</div>
                 <div class="font-mono text-sm text-white font-bold mt-1">Local Agent</div>
-                <div class="text-[11px] text-gray-500 mt-1">Cursor / Claude / Copilot</div>
+                <div class="text-[11px] text-gray-500 mt-1">Cursor / Claude / Copilot<br><span class="text-cyanAccent/60">Grok Code / Antigravity</span></div>
             </div>
         </div>
         
         <p class="text-xs text-center font-mono text-gray-500 mt-4">
             *No raw files leave your machine. Only stripped structures, signatures, and sanitised text are emitted to reasoning engines.
+        </p>
+    </section>
+
+    <!-- SERVER-SIDE LLM PIPELINE -->
+    <section class="max-w-7xl mx-auto px-4 py-12 border-t border-cyanMuted/20">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/30 bg-violet-500/10 text-xs text-violet-400 font-mono mb-4">
+                <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
+                Pillar 3 — Enterprise Cloud Deployment
+            </div>
+            <h3 class="text-sm font-mono tracking-widest text-violet-400 uppercase">Cloud-Native LLM Integration</h3>
+            <h2 class="text-2xl sm:text-3xl font-mono text-white font-bold mt-2">Server-Side LLM Pipeline</h2>
+            <p class="text-sm text-gray-400 mt-3 max-w-2xl mx-auto font-sans leading-relaxed">For enterprises embedding AI-NEURON as a persistent memory microservice. Exposes TCP/JSON-RPC endpoints consumed by hosted LLM APIs — Gemini, Grok, Claude, and beyond.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-7 gap-4 items-center bg-darkPanel/40 p-6 border border-violet-500/20 rounded-xl relative overflow-hidden">
+            <!-- Violet gradient glow -->
+            <div class="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-violet-500/5 pointer-events-none rounded-xl"></div>
+
+            <!-- Source: Enterprise Codebase -->
+            <div class="lg:col-span-2 border border-violet-500/30 bg-darkPanel p-4 rounded-lg flex flex-col items-center justify-center text-center h-40 relative z-10">
+                <i data-lucide="server" class="w-8 h-8 text-violet-400 mb-2"></i>
+                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Enterprise Source</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">Private Codebase</div>
+                <div class="text-[11px] text-gray-500 mt-1">Git Repos / CI Pipelines</div>
+            </div>
+
+            <!-- Connector Arrow -->
+            <div class="flex items-center justify-center lg:col-span-1 h-8 lg:h-auto relative z-10">
+                <i data-lucide="arrow-right" class="w-6 h-6 text-violet-400/50 rotate-90 lg:rotate-0"></i>
+            </div>
+
+            <!-- AI-NEURON Server Core -->
+            <div class="lg:col-span-2 border-2 border-violet-500 bg-violet-500/5 p-4 rounded-lg flex flex-col items-center justify-center text-center h-44 shadow-[0_0_20px_rgba(139,92,246,0.12)] relative z-10">
+                <i data-lucide="cpu" class="w-8 h-8 text-violet-400 mb-2"></i>
+                <div class="font-mono text-xs text-violet-400 uppercase tracking-widest font-semibold">ai-neuron server</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">TCP Socket / JSON-RPC</div>
+                <div class="text-[11px] text-gray-400 mt-2">Stateless &bull; Scalable &bull; Containerised</div>
+            </div>
+
+            <!-- Connector Arrow -->
+            <div class="flex items-center justify-center lg:col-span-1 h-8 lg:h-auto relative z-10">
+                <i data-lucide="arrow-right" class="w-6 h-6 text-violet-400/50 rotate-90 lg:rotate-0"></i>
+            </div>
+
+            <!-- Cloud LLM Output -->
+            <div class="lg:col-span-1 border border-violet-500/30 bg-darkPanel p-4 rounded-lg flex flex-col items-center justify-center text-center h-40 relative z-10">
+                <i data-lucide="brain" class="w-8 h-8 text-violet-400 mb-2"></i>
+                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Cloud LLM API</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">Hosted Models</div>
+                <div class="text-[11px] text-gray-500 mt-1">Gemini / Grok<br>Claude API / GPT-4</div>
+            </div>
+        </div>
+
+        <!-- LLM Compatibility Badges -->
+        <div class="flex flex-wrap justify-center gap-3 mt-6">
+            <span class="font-mono text-[10px] px-3 py-1 border border-violet-500/20 rounded-full text-violet-400/80 bg-violet-500/5">Gemini 2.5 Pro</span>
+            <span class="font-mono text-[10px] px-3 py-1 border border-violet-500/20 rounded-full text-violet-400/80 bg-violet-500/5">Grok 3 / Grok Code</span>
+            <span class="font-mono text-[10px] px-3 py-1 border border-violet-500/20 rounded-full text-violet-400/80 bg-violet-500/5">Claude 3.7 Sonnet API</span>
+            <span class="font-mono text-[10px] px-3 py-1 border border-violet-500/20 rounded-full text-violet-400/80 bg-violet-500/5">GPT-4o API</span>
+            <span class="font-mono text-[10px] px-3 py-1 border border-violet-500/20 rounded-full text-violet-400/80 bg-violet-500/5">Docker / K8s ready</span>
+            <span class="font-mono text-[10px] px-3 py-1 border border-violet-500/20 rounded-full text-violet-400/80 bg-violet-500/5">TCP JSON-RPC transport</span>
+        </div>
+
+        <p class="text-xs text-center font-mono text-gray-500 mt-4">
+            *AI-NEURON Server sanitises and deduplicates all context before forwarding to hosted LLM endpoints — zero raw source leaves without scrubbing.
         </p>
     </section>
 
