@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tokio::io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-use crate::{dedup, sanitize, search, session};
+use crate::{audit, dedup, sanitize, search, session};
+use std::time::Instant;
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
@@ -212,12 +213,17 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                 }
             };
 
+            // Enterprise audit: start wall-clock timer for this tool call
+            let _t0 = Instant::now();
+            let _proj = project_root.display().to_string();
+
             match call_params.name.as_str() {
                 "get_project_context" => {
                     match session::get_agent_context_string(project_root, &[]).await {
                         Ok(raw_ctx) => {
                             let deduped = dedup::deduplicate_context(&raw_ctx);
                             let sanitized = sanitize::sanitize_content(&deduped);
+                            audit::record("get_project_context", &serde_json::Value::Null, sanitized.len(), _t0.elapsed().as_millis() as u64, &_proj);
                             let content = serde_json::json!({
                                 "content": [
                                     {
@@ -253,6 +259,7 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                     match search::search_symbols_string(project_root, &args.query).await {
                         Ok(res_str) => {
                             let sanitized = sanitize::sanitize_content(&res_str);
+                            audit::record("search_symbols", &serde_json::json!({"query": &args.query}), sanitized.len(), _t0.elapsed().as_millis() as u64, &_proj);
                             let content = serde_json::json!({
                                 "content": [
                                     {
@@ -287,6 +294,7 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
 
                     match crate::graph::get_trace_symbol_string(&args.symbol).await {
                         Ok(trace_str) => {
+                            audit::record("get_impact_graph", &serde_json::json!({"symbol": &args.symbol}), trace_str.len(), _t0.elapsed().as_millis() as u64, &_proj);
                             let content = serde_json::json!({
                                 "content": [
                                     {
@@ -322,6 +330,7 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                     match search::get_symbol_info_string(project_root, &args.name).await {
                         Ok(res_str) => {
                             let sanitized = sanitize::sanitize_content(&res_str);
+                            audit::record("get_symbol_info", &serde_json::json!({"name": &args.name}), sanitized.len(), _t0.elapsed().as_millis() as u64, &_proj);
                             let content = serde_json::json!({
                                 "content": [
                                     {
@@ -357,6 +366,7 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
                     match search::get_file_content_string(project_root, &args.path).await {
                         Ok(res_str) => {
                             let sanitized = sanitize::sanitize_content(&res_str);
+                            audit::record("get_file_content", &serde_json::json!({"path": &args.path}), sanitized.len(), _t0.elapsed().as_millis() as u64, &_proj);
                             let content = serde_json::json!({
                                 "content": [
                                     {

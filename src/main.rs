@@ -1,7 +1,8 @@
-//! Neuron — Universal Persistent Memory Layer for AI Coding Agents (v14)
+//! Neuron Platform — Universal Persistent Memory Layer for AI Coding Agents (v14)
 //! CLI entrypoint. All commands are dispatched from here.
 
 mod analyzer;
+mod audit;       // Enterprise audit logging engine
 mod bridge;
 mod cleanup;
 mod dedup;
@@ -19,6 +20,7 @@ mod project_manager;
 mod sanitize;
 mod search;
 mod session;
+mod sessions;    // Neuron Sessions™ — personal AI memory daemon
 mod stream;
 mod sync;
 mod utils;
@@ -231,6 +233,61 @@ enum Commands {
     /// Start native Model Context Protocol (MCP) server over stdin/stdout
     #[command(name = "start-mcp")]
     StartMcp,
+
+    /// Enterprise audit log — view, export, or clear MCP tool invocation records
+    Audit {
+        /// Export audit log to a JSON file
+        #[arg(short, long, value_name = "FILE")]
+        export: Option<String>,
+
+        /// Show only the last N entries
+        #[arg(short, long, value_name = "N")]
+        tail: Option<usize>,
+
+        /// Clear the audit log (irreversible)
+        #[arg(long)]
+        clear: bool,
+    },
+
+    /// Neuron Sessions™ — personal AI memory and cross-tab LLM coherence
+    #[command(name = "sessions")]
+    Sessions {
+        /// Initialize the sessions identity ledger
+        #[arg(long)]
+        init: bool,
+
+        /// Set a profile key/value (e.g. --set expertise_rust=expert)
+        #[arg(long, value_name = "KEY=VALUE")]
+        set: Option<String>,
+
+        /// Add an episodic memory event
+        #[arg(long, value_name = "SUMMARY")]
+        episode: Option<String>,
+
+        /// Importance score for the episode (1-10, default 5)
+        #[arg(long, default_value = "5")]
+        importance: i64,
+
+        /// Add an active goal
+        #[arg(long, value_name = "TITLE")]
+        goal: Option<String>,
+
+        /// Generate context injection block for this tab ID
+        #[arg(long, value_name = "TAB_ID")]
+        context: Option<String>,
+
+        /// Log/update an active LLM session tab (format: tab_id:topic:llm)
+        #[arg(long, value_name = "TAB:TOPIC:LLM")]
+        log: Option<String>,
+
+        /// Close/remove an active session tab
+        #[arg(long, value_name = "TAB_ID")]
+        close: Option<String>,
+
+        /// Show all sessions data (profile, goals, episodes, active tabs)
+        #[arg(long)]
+        show: bool,
+    },
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -421,6 +478,49 @@ async fn main() -> Result<()> {
         Commands::StartMcp => {
             let neuron_root = project_manager::discover_project_root().await?;
             mcp::run_mcp_server(&neuron_root).await?;
+        }
+
+        Commands::Audit { export, tail, clear } => {
+            audit::run_audit_cli(export.as_deref(), tail, clear).await?;
+        }
+
+        Commands::Sessions {
+            init, set, episode, importance, goal,
+            context, log, close, show,
+        } => {
+            use sessions::SessionsCmd;
+            let cmd = if init {
+                SessionsCmd::Init
+            } else if let Some(kv) = set {
+                let (k, v) = kv.split_once('=')
+                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .ok_or_else(|| anyhow::anyhow!("--set expects KEY=VALUE format"))?;
+                SessionsCmd::SetProfile { key: k, value: v }
+            } else if let Some(summary) = episode {
+                SessionsCmd::AddEpisode { summary, importance }
+            } else if let Some(title) = goal {
+                SessionsCmd::AddGoal { title }
+            } else if let Some(tab) = context {
+                SessionsCmd::Context { tab }
+            } else if let Some(raw) = log {
+                let parts: Vec<&str> = raw.splitn(3, ':').collect();
+                if parts.len() < 3 {
+                    return Err(anyhow::anyhow!("--log expects TAB_ID:TOPIC:LLM format"));
+                }
+                SessionsCmd::LogSession {
+                    tab: parts[0].to_string(),
+                    topic: parts[1].to_string(),
+                    llm: parts[2].to_string(),
+                }
+            } else if let Some(tab) = close {
+                SessionsCmd::CloseSession { tab }
+            } else if show {
+                SessionsCmd::Show
+            } else {
+                // Default: show
+                SessionsCmd::Show
+            };
+            sessions::run_sessions_cli(cmd).await?;
         }
     }
 
