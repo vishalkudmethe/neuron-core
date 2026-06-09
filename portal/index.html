@@ -34,6 +34,9 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase Auth SDK (compat v9 bundle) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 </head>
 <body class="bg-darkBg text-slate-100 font-sans h-full flex flex-col selection:bg-cyanAccent/30 selection:text-white">
     <!-- Top Decorative Line -->
@@ -64,6 +67,9 @@
                     <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
                     <span id="badge-name" class="font-mono text-xs text-slate-300">Syncing Local Memory...</span>
                     <span id="badge-role" class="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-cyanAccent/10 text-cyanAccent border border-cyanAccent/10">Active</span>
+                    <button onclick="signOut()" title="Sign out" class="ml-1 text-slate-500 hover:text-rose-400 transition-colors">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                    </button>
                 </div>
             </div>
         </header>
@@ -198,11 +204,11 @@
 
                     <!-- OAuth Buttons -->
                     <div id="login-oauth-grid" class="grid grid-cols-2 gap-3">
-                        <button onclick="simulateOAuth('Google')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-slate-900 text-slate-300 font-mono text-xs transition-colors">
-                            <i data-lucide="chrome" class="w-4 h-4"></i>
+                        <button onclick="signInWithOAuth('Google')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-300 font-mono text-xs transition-colors">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                             Google
                         </button>
-                        <button onclick="simulateOAuth('GitHub')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-slate-900 text-slate-300 font-mono text-xs transition-colors">
+                        <button onclick="signInWithOAuth('GitHub')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-300 font-mono text-xs transition-colors">
                             <i data-lucide="github" class="w-4 h-4"></i>
                             GitHub
                         </button>
@@ -593,6 +599,43 @@
 
     <!-- Script for Portal UI logic -->
     <script>
+        // ─────────────────────────────────────────────────────────────────────
+        // FIREBASE CONFIGURATION
+        // 1. Go to https://console.firebase.google.com
+        // 2. Create a project → Add a Web App → copy the config below
+        // 3. In Authentication → Sign-in methods, enable Google and GitHub
+        // 4. For GitHub: create an OAuth App at github.com/settings/developers
+        //    and paste the Client ID + Secret into Firebase Console
+        // ─────────────────────────────────────────────────────────────────────
+        const FIREBASE_CONFIG = {
+            apiKey:            "REPLACE_WITH_YOUR_API_KEY",
+            authDomain:        "REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com",
+            projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
+            storageBucket:     "REPLACE_WITH_YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
+            appId:             "REPLACE_WITH_YOUR_APP_ID"
+        };
+
+        // Detect if Firebase is configured (not placeholders)
+        const FIREBASE_READY = !FIREBASE_CONFIG.apiKey.startsWith('REPLACE');
+        let fbAuth = null;
+
+        if (FIREBASE_READY) {
+            firebase.initializeApp(FIREBASE_CONFIG);
+            fbAuth = firebase.auth();
+            fbAuth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+
+            // Restore session on page load
+            fbAuth.onAuthStateChanged((user) => {
+                if (user) {
+                    const name = user.displayName || user.email.split('@')[0];
+                    document.getElementById('badge-name').textContent = name;
+                    document.getElementById('user-display-badge').classList.remove('hidden');
+                    lucide.createIcons();
+                }
+            });
+        }
+
         const API_URL = ""; // Empty string for same-host routing
         let projectsData = [];
         let activeRealm = 'dev';
@@ -716,16 +759,69 @@
             }
         }
 
-        function simulateOAuth(provider) {
+        async function signInWithOAuth(provider) {
             const actionBtn = document.getElementById('login-action-btn');
             actionBtn.disabled = true;
-            actionBtn.textContent = `REDIRECTING TO ${provider.toUpperCase()}...`;
-            
-            setTimeout(() => {
+            actionBtn.textContent = `CONNECTING TO ${provider.toUpperCase()}...`;
+
+            if (!FIREBASE_READY) {
+                // Firebase not configured yet — show setup notice instead of silent mock
                 actionBtn.disabled = false;
+                actionBtn.textContent = 'SIGN IN';
+                alert(
+                    'Firebase is not configured yet.\n\n' +
+                    'To enable real Google / GitHub login:\n' +
+                    '1. Create a project at console.firebase.google.com\n' +
+                    '2. Enable Google + GitHub sign-in providers\n' +
+                    '3. Paste your config into FIREBASE_CONFIG in portal/index.html\n\n' +
+                    'Opening in simulator mode...'
+                );
                 closeLoginModal();
                 switchRealm(activeRealm);
-            }, 1000);
+                return;
+            }
+
+            try {
+                let firebaseProvider;
+                if (provider === 'Google') {
+                    firebaseProvider = new firebase.auth.GoogleAuthProvider();
+                    firebaseProvider.addScope('email');
+                    firebaseProvider.addScope('profile');
+                } else if (provider === 'GitHub') {
+                    firebaseProvider = new firebase.auth.GithubAuthProvider();
+                    firebaseProvider.addScope('user:email');
+                } else {
+                    throw new Error('Unknown provider: ' + provider);
+                }
+
+                const result = await fbAuth.signInWithPopup(firebaseProvider);
+                const user = result.user;
+                const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'Developer');
+
+                // Update header badge with real identity
+                document.getElementById('badge-name').textContent = displayName;
+                document.getElementById('user-display-badge').classList.remove('hidden');
+                lucide.createIcons();
+
+                closeLoginModal();
+                switchRealm(activeRealm);
+            } catch (error) {
+                console.error('Firebase auth error:', error);
+                actionBtn.disabled = false;
+                actionBtn.textContent = 'SIGN IN';
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    alert('Authentication failed: ' + error.message);
+                }
+            }
+        }
+
+        async function signOut() {
+            if (fbAuth) {
+                await fbAuth.signOut();
+            }
+            document.getElementById('user-display-badge').classList.add('hidden');
+            document.getElementById('gateway-screen').classList.remove('hidden');
+            document.getElementById('dashboard-screen').classList.add('hidden');
         }
 
         window.addEventListener('load', () => {

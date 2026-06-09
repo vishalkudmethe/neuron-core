@@ -350,51 +350,49 @@
     <!-- SERVER-SIDE LLM PIPELINE -->
     <section class="max-w-7xl mx-auto px-4 py-12 border-t border-cyanMuted/20">
         <div class="text-center mb-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/30 bg-violet-500/10 text-xs text-violet-400 font-mono mb-4">
-                <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
-                Pillar 3 — Enterprise Cloud Deployment
-            </div>
-            <h3 class="text-sm font-mono tracking-widest text-violet-400 uppercase">Cloud-Native LLM Integration</h3>
+            <h3 class="text-sm font-mono tracking-widest text-violet-400 uppercase">Per-User Memory Microservice</h3>
             <h2 class="text-2xl sm:text-3xl font-mono text-white font-bold mt-2">Server-Side LLM Pipeline</h2>
-            <p class="text-sm text-gray-400 mt-3 max-w-2xl mx-auto font-sans leading-relaxed">For enterprises embedding AI-NEURON as a persistent memory microservice. Exposes TCP/JSON-RPC endpoints consumed by hosted LLM APIs — Gemini, Grok, Claude, and beyond.</p>
+            <p class="text-sm text-gray-400 mt-3 max-w-2xl mx-auto font-sans leading-relaxed">For companies embedding AI-NEURON as a per-user persistent memory layer alongside their hosted LLM. The LLM queries AI-NEURON via TCP/JSON-RPC to retrieve sanitised, personalised user context — enabling multi-tab awareness and deep session continuity across every conversation.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-7 gap-4 items-center bg-darkPanel/40 p-6 border border-violet-500/20 rounded-xl relative overflow-hidden">
             <!-- Violet gradient glow -->
             <div class="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-violet-500/5 pointer-events-none rounded-xl"></div>
 
-            <!-- Source: Enterprise Codebase -->
+            <!-- Source: User Session / Workspace -->
             <div class="lg:col-span-2 border border-violet-500/30 bg-darkPanel p-4 rounded-lg flex flex-col items-center justify-center text-center h-40 relative z-10">
-                <i data-lucide="server" class="w-8 h-8 text-violet-400 mb-2"></i>
-                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Enterprise Source</div>
-                <div class="font-mono text-sm text-white font-bold mt-1">Private Codebase</div>
-                <div class="text-[11px] text-gray-500 mt-1">Git Repos / CI Pipelines</div>
+                <i data-lucide="user" class="w-8 h-8 text-violet-400 mb-2"></i>
+                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Continuously Indexed</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">User Sessions</div>
+                <div class="text-[11px] text-gray-500 mt-1">Tab History &bull; Active Goals<br>Cross-Project Context</div>
             </div>
 
-            <!-- Connector Arrow -->
+            <!-- Arrow: data flows into Neuron -->
             <div class="flex items-center justify-center lg:col-span-1 h-8 lg:h-auto relative z-10">
                 <i data-lucide="arrow-right" class="w-6 h-6 text-violet-400/50 rotate-90 lg:rotate-0"></i>
             </div>
 
-            <!-- AI-NEURON Server Core -->
+            <!-- AI-NEURON Server Core (memory index, serves on demand) -->
             <div class="lg:col-span-2 border-2 border-violet-500 bg-violet-500/5 p-4 rounded-lg flex flex-col items-center justify-center text-center h-44 shadow-[0_0_20px_rgba(139,92,246,0.12)] relative z-10">
                 <i data-lucide="cpu" class="w-8 h-8 text-violet-400 mb-2"></i>
                 <div class="font-mono text-xs text-violet-400 uppercase tracking-widest font-semibold">ai-neuron server</div>
-                <div class="font-mono text-sm text-white font-bold mt-1">TCP Socket / JSON-RPC</div>
-                <div class="text-[11px] text-gray-400 mt-2">Stateless &bull; Scalable &bull; Containerised</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">TCP / JSON-RPC</div>
+                <div class="text-[11px] text-gray-400 mt-2">Serves context on demand<br>Sanitises &bull; Deduplicates</div>
             </div>
 
-            <!-- Connector Arrow -->
-            <div class="flex items-center justify-center lg:col-span-1 h-8 lg:h-auto relative z-10">
-                <i data-lucide="arrow-right" class="w-6 h-6 text-violet-400/50 rotate-90 lg:rotate-0"></i>
+            <!-- Bidirectional arrows: LLM queries Neuron and gets context back -->
+            <div class="flex flex-col items-center justify-center lg:col-span-1 h-8 lg:h-auto relative z-10 gap-0.5">
+                <i data-lucide="arrow-left" class="w-5 h-5 text-violet-400/60 rotate-90 lg:rotate-0"></i>
+                <span class="text-[8px] font-mono text-violet-400/50 hidden lg:block text-center leading-tight">LLM queries<br>Neuron</span>
+                <i data-lucide="arrow-right" class="w-5 h-5 text-violet-400/60 rotate-90 lg:rotate-0"></i>
             </div>
 
-            <!-- Cloud LLM Output -->
+            <!-- Cloud LLM: the consumer that calls Neuron -->
             <div class="lg:col-span-1 border border-violet-500/30 bg-darkPanel p-4 rounded-lg flex flex-col items-center justify-center text-center h-40 relative z-10">
                 <i data-lucide="brain" class="w-8 h-8 text-violet-400 mb-2"></i>
-                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Cloud LLM API</div>
-                <div class="font-mono text-sm text-white font-bold mt-1">Hosted Models</div>
-                <div class="text-[11px] text-gray-500 mt-1">Gemini / Grok<br>Claude API / GPT-4</div>
+                <div class="font-mono text-xs text-grayMuted uppercase tracking-wider">Hosted LLM</div>
+                <div class="font-mono text-sm text-white font-bold mt-1">Calls Neuron</div>
+                <div class="text-[11px] text-gray-500 mt-1">Gemini / Grok<br>Claude / GPT-4</div>
             </div>
         </div>
 
@@ -409,7 +407,7 @@
         </div>
 
         <p class="text-xs text-center font-mono text-gray-500 mt-4">
-            *AI-NEURON Server sanitises and deduplicates all context before forwarding to hosted LLM endpoints — zero raw source leaves without scrubbing.
+            *AI-NEURON never pushes data — hosted LLMs call Neuron's JSON-RPC tools to pull sanitised, personalised context on demand. Zero raw source leaves without scrubbing.
         </p>
     </section>
 
