@@ -121,6 +121,7 @@ pub fn record(
 // ─── Timer Helper ─────────────────────────────────────────────────────────────
 
 /// Wraps a synchronous closure, records timing, writes audit entry, returns result.
+#[allow(dead_code)]
 pub fn timed_record<F, T>(tool: &str, params: &serde_json::Value, project: &str, f: F) -> T
 where
     F: FnOnce() -> T,

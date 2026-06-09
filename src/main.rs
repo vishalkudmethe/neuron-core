@@ -11,6 +11,7 @@ mod conversation;
 mod dependency;
 mod git;
 mod graph;
+mod license;     // Enterprise licensing and key registration
 mod mcp;
 mod intent;
 mod loop_guard;
@@ -19,6 +20,7 @@ mod parser;
 mod project_manager;
 mod sanitize;
 mod search;
+mod server;      // TCP/IP MCP server for cloud/enterprise deployments
 mod session;
 mod sessions;    // Neuron Sessions™ — personal AI memory daemon
 mod stream;
@@ -234,6 +236,21 @@ enum Commands {
     #[command(name = "start-mcp")]
     StartMcp,
 
+    /// Start Model Context Protocol (MCP) server over TCP socket (for cloud/enterprise deployment)
+    #[command(name = "start-server")]
+    StartServer {
+        /// TCP port to listen on (default: 8080)
+        #[arg(short, long, default_value = "8080")]
+        port: u16,
+    },
+
+    /// Register a commercial or enterprise license key
+    Register {
+        /// The cryptographic license key string (format: NEURON-ENT-<COMPANY>-<EXPIRY>-<SIG>)
+        #[arg(index = 1)]
+        key: String,
+    },
+
     /// Enterprise audit log — view, export, or clear MCP tool invocation records
     Audit {
         /// Export audit log to a JSON file
@@ -307,7 +324,7 @@ async fn main() -> Result<()> {
         .with_target(false)
         .compact();
 
-    if matches!(cli.command, Commands::StartMcp) {
+    if matches!(cli.command, Commands::StartMcp | Commands::StartServer { .. }) {
         subscriber.with_writer(std::io::stderr).init();
     } else {
         subscriber.init();
@@ -480,6 +497,34 @@ async fn main() -> Result<()> {
             mcp::run_mcp_server(&neuron_root).await?;
         }
 
+        Commands::StartServer { port } => {
+            let neuron_root = project_manager::discover_project_root().await?;
+            eprintln!("[SERVER] Neuron MCP TCP Server initialising on port {}...", port);
+            server::start_mcp_tcp_server(&neuron_root, port).await?;
+        }
+
+        Commands::Register { key } => {
+            match license::register_key(&key) {
+                Ok(info) => {
+                    println!(
+                        "  {} Enterprise License registered successfully!",
+                        "✓".green().bold()
+                    );
+                    println!("  Company  : {}", info.company.cyan().bold());
+                    println!("  Tier     : {}", info.tier.green());
+                    println!("  Expires  : {}", info.expiry.yellow());
+                    println!("  Stored at: ~/.neuron/license.key");
+                }
+                Err(e) => {
+                    println!(
+                        "  {} License registration failed: {}",
+                        "✗".red().bold(), e
+                    );
+                    std::process::exit(1);
+                }
+            }
+        }
+
         Commands::Audit { export, tail, clear } => {
             audit::run_audit_cli(export.as_deref(), tail, clear).await?;
         }
@@ -530,6 +575,13 @@ async fn main() -> Result<()> {
 // ─── Banner ───────────────────────────────────────────────────────────────────
 
 fn print_banner() {
+    let lic = license::get_active_license();
+    let (edition_label, edition_color) = if lic.tier.starts_with("Enterprise") {
+        (format!("Enterprise Edition — licensed to {}", lic.company), true)
+    } else {
+        ("Community Edition (AGPL-3.0)".to_string(), false)
+    };
+
     println!(
         "{}",
         r#"
@@ -544,9 +596,14 @@ fn print_banner() {
         .bold()
     );
     println!(
-        "  {} {}  {}\n",
+        "  {} {}  {}",
         "Universal Persistent Memory Layer".white().bold(),
-        "v14".bright_yellow().bold(),
+        "v17".bright_yellow().bold(),
         "for AI Coding Agents".dimmed()
     );
+    if edition_color {
+        println!("  {}\n", edition_label.green().bold());
+    } else {
+        println!("  {}\n", edition_label.dimmed());
+    }
 }

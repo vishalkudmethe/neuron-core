@@ -11,27 +11,27 @@ use std::time::Instant;
 
 #[allow(dead_code)]
 #[derive(Debug, Deserialize)]
-struct JsonRpcRequest {
-    jsonrpc: String,
-    id: Option<serde_json::Value>,
-    method: String,
-    params: Option<serde_json::Value>,
+pub(crate) struct JsonRpcRequest {
+    pub(crate) jsonrpc: String,
+    pub(crate) id: Option<serde_json::Value>,
+    pub(crate) method: String,
+    pub(crate) params: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
-struct JsonRpcResponse {
-    jsonrpc: String,
-    id: Option<serde_json::Value>,
+pub(crate) struct JsonRpcResponse {
+    pub(crate) jsonrpc: String,
+    pub(crate) id: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    result: Option<serde_json::Value>,
+    pub(crate) result: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    error: Option<JsonRpcError>,
+    pub(crate) error: Option<JsonRpcError>,
 }
 
 #[derive(Debug, Serialize)]
-struct JsonRpcError {
-    code: i32,
-    message: String,
+pub(crate) struct JsonRpcError {
+    pub(crate) code: i32,
+    pub(crate) message: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -106,7 +106,7 @@ pub async fn run_mcp_server(project_root: &Path) -> Result<()> {
     Ok(())
 }
 
-async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<JsonRpcResponse> {
+pub(crate) async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<JsonRpcResponse> {
     match req.method.as_str() {
         "initialize" => {
             let result = serde_json::json!({
@@ -478,7 +478,7 @@ async fn handle_request(project_root: &Path, req: &JsonRpcRequest) -> Option<Jso
     }
 }
 
-fn error_response(id: Option<serde_json::Value>, code: i32, message: String) -> JsonRpcResponse {
+pub(crate) fn error_response(id: Option<serde_json::Value>, code: i32, message: String) -> JsonRpcResponse {
     JsonRpcResponse {
         jsonrpc: "2.0".to_string(),
         id,
