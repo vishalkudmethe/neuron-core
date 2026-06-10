@@ -98,15 +98,22 @@ pub struct LicenseStatus {
     pub is_valid: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AuditEntry {
     pub id: String,
     pub timestamp: String,
     pub tool: String,
     pub session_id: String,
+    /// Accepts both "project" (written by audit.rs) and "project_path" (legacy).
+    #[serde(alias = "project", rename = "project_path")]
     pub project_path: String,
     pub duration_ms: u64,
+    #[serde(default)]
+    pub previous_hash: String,
+    #[serde(default)]
+    pub hash: String,
 }
+
 
 #[derive(Serialize)]
 pub struct AdminStats {
@@ -328,7 +335,7 @@ async fn read_all_projects(state: &PortalState) -> Vec<ProjectSummary> {
     }
 }
 
-async fn generate_context_export(state: &PortalState, project_id: &str) -> ContextExport {
+async fn generate_context_export(_state: &PortalState, project_id: &str) -> ContextExport {
     ContextExport {
         project_id: project_id.to_string(),
         project_name: "Project Export".to_string(),
@@ -352,7 +359,7 @@ async fn generate_context_export(state: &PortalState, project_id: &str) -> Conte
     }
 }
 
-async fn read_agent_history(project_id: &str) -> Vec<AgentHistoryEntry> {
+async fn read_agent_history(_project_id: &str) -> Vec<AgentHistoryEntry> {
     vec![
         AgentHistoryEntry {
             agent: "Antigravity".to_string(),
@@ -369,7 +376,7 @@ async fn read_agent_history(project_id: &str) -> Vec<AgentHistoryEntry> {
     ]
 }
 
-async fn read_machines(state: &PortalState) -> Vec<MachineEntry> {
+async fn read_machines(_state: &PortalState) -> Vec<MachineEntry> {
     vec![
         MachineEntry {
             machine_id: "machine-001".to_string(),
@@ -388,7 +395,7 @@ async fn read_machines(state: &PortalState) -> Vec<MachineEntry> {
     ]
 }
 
-async fn search_memory(state: &PortalState, query: &str, limit: u32) -> Vec<serde_json::Value> {
+async fn search_memory(_state: &PortalState, query: &str, _limit: u32) -> Vec<serde_json::Value> {
     // Future: run FTS5 search across all project DBs
     vec![
         serde_json::json!({
@@ -412,7 +419,7 @@ async fn read_admin_stats(state: &PortalState) -> AdminStats {
     }
 }
 
-async fn read_license_status(state: &PortalState) -> LicenseStatus {
+async fn read_license_status(_state: &PortalState) -> LicenseStatus {
     let info = crate::license::get_active_license();
     let is_valid = !info.tier.contains("Community") || info.company != "Community User";
     LicenseStatus {
@@ -436,19 +443,13 @@ async fn read_audit_log(state: &PortalState, limit: usize) -> Vec<AuditEntry> {
         Err(_) => return vec![],
     };
 
+    // Use typed deserialization — serde alias handles both "project" and "project_path" keys.
+    // Older entries without hash fields are handled by #[serde(default)].
     content
         .lines()
         .rev()
         .take(limit)
-        .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
-        .map(|v| AuditEntry {
-            id: v["id"].as_str().unwrap_or("").to_string(),
-            timestamp: v["timestamp"].as_str().unwrap_or("").to_string(),
-            tool: v["tool"].as_str().unwrap_or("").to_string(),
-            session_id: v["session_id"].as_str().unwrap_or("").to_string(),
-            project_path: v["project_path"].as_str().unwrap_or("").to_string(),
-            duration_ms: v["duration_ms"].as_u64().unwrap_or(0),
-        })
+        .filter_map(|line| serde_json::from_str::<AuditEntry>(line).ok())
         .collect()
 }
 
@@ -551,7 +552,7 @@ async fn check_sso(Query(params): Query<SsoCheckParams>) -> impl IntoResponse {
 }
 
 /// GET /api/v1/dev/hubs
-async fn get_hubs(State(state): State<Arc<PortalState>>) -> impl IntoResponse {
+async fn get_hubs(State(_state): State<Arc<PortalState>>) -> impl IntoResponse {
     let pool = match crate::sessions::open_pool().await {
         Ok(p) => p,
         Err(_) => {
@@ -593,7 +594,7 @@ async fn get_hubs(State(state): State<Arc<PortalState>>) -> impl IntoResponse {
 
 /// POST /api/v1/dev/hubs
 async fn register_hub(
-    State(state): State<Arc<PortalState>>,
+    State(_state): State<Arc<PortalState>>,
     Json(payload): Json<CreateHubRequest>,
 ) -> impl IntoResponse {
     let pool = match crate::sessions::open_pool().await {
@@ -634,7 +635,7 @@ async fn register_hub(
 /// POST /api/v1/dev/hubs/sync
 /// Syncs local memory snapshot (Spoke) to Corporate Hub (Master Brain) with auto data-sanitization
 async fn sync_milestone(
-    State(state): State<Arc<PortalState>>,
+    State(_state): State<Arc<PortalState>>,
     Json(payload): Json<SyncMilestoneRequest>,
 ) -> impl IntoResponse {
     // 1. Run Data Sanitization to prevent leak of credentials, keys, or passwords
@@ -677,28 +678,22 @@ async fn sync_milestone(
 
 /// POST /api/v1/admin/seats/provision
 async fn provision_seat(
-    State(state): State<Arc<PortalState>>,
+    State(_state): State<Arc<PortalState>>,
     Json(payload): Json<ProvisionSeatRequest>,
 ) -> impl IntoResponse {
     let now = chrono::Utc::now().to_rfc3339();
+    let _ = &now; // used implicitly via audit::record's internal timestamp
     let mock_token = format!("AINEURON-SEAT-{}-{}", uuid::Uuid::new_v4().to_string().split('-').next().unwrap_or(""), payload.role.to_uppercase());
 
-    // Record seat provisioning event in internal audit.log
-    let audit_log_path = state.home_neuron_dir.join("audit.log");
-    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(&audit_log_path) {
-        let log_entry = serde_json::json!({
-            "id": format!("evt-{}", uuid::Uuid::new_v4()),
-            "timestamp": now,
-            "tool": format!("provision_seat:{}", payload.role),
-            "session_id": "admin-provision",
-            "project_path": payload.email,
-            "duration_ms": 15
-        });
-        if let Ok(serialized) = serde_json::to_string(&log_entry) {
-            use std::io::Write;
-            let _ = writeln!(file, "{}", serialized);
-        }
-    }
+    // Record seat provisioning via the cryptographic audit chain so this event
+    // is properly SHA-256 linked to all prior log entries.
+    crate::audit::record(
+        &format!("provision_seat:{}", payload.role),
+        &serde_json::json!({ "email": payload.email, "role": payload.role }),
+        0,
+        15,
+        &payload.email,
+    );
 
     Json(ApiResponse {
         ok: true,
