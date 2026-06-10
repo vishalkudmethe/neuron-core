@@ -610,7 +610,7 @@
                             <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Personal AI Session Ledger
                         </li>
                     </ul>
-                    <button onclick="openCheckout('personal', 499, 'Personal Cloud')" class="block w-full text-center py-2 rounded bg-cyanAccent/10 border border-cyanAccent hover:bg-cyanAccent/20 text-xs font-mono text-cyanAccent font-bold transition-all">
+                    <button onclick="openCheckout('personal', 'Personal Cloud')" class="block w-full text-center py-2 rounded bg-cyanAccent/10 border border-cyanAccent hover:bg-cyanAccent/20 text-xs font-mono text-cyanAccent font-bold transition-all">
                         Upgrade to Cloud
                     </button>
                 </div>
@@ -647,7 +647,7 @@
                             <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Team Impact Graphs
                         </li>
                     </ul>
-                    <button onclick="openCheckout('pro', 999, 'Pro Team')" class="block w-full text-center py-2 rounded bg-cyanAccent text-xs font-mono text-black font-bold hover:bg-cyanMuted transition-colors">
+                    <button onclick="openCheckout('pro', 'Pro Team')" class="block w-full text-center py-2 rounded bg-cyanAccent text-xs font-mono text-black font-bold hover:bg-cyanMuted transition-colors">
                         Start Free Trial
                     </button>
                 </div>
@@ -736,7 +736,7 @@
     </script>
 
     <!-- ══════════════════════════════════════════
-         CASHFREE CHECKOUT MODAL
+         CASHFREE CHECKOUT MODAL WITH CURRENCY SELECTION
          ══════════════════════════════════════════ -->
     <div id="cf-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm">
         <div class="bg-[#0A0F1D] border border-[#0891B2]/30 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
@@ -747,6 +747,22 @@
                 </div>
                 <button onclick="closeCheckout()" class="text-gray-500 hover:text-white transition-colors text-xl font-mono">&times;</button>
             </div>
+            
+            <!-- Currency Toggle -->
+            <div class="mb-5">
+                <label class="block text-xs font-mono text-gray-400 mb-1.5">Select Payment Currency</label>
+                <div class="grid grid-cols-2 gap-2 bg-black/30 p-1 rounded-lg border border-[#0891B2]/15">
+                    <button type="button" id="curr-btn-INR" onclick="setCurrency('INR')"
+                        class="py-2 rounded font-mono text-xs font-bold transition-all border border-[#00E5FF] bg-[#00E5FF]/15 text-white">
+                        🇮🇳 INR (Domestic)
+                    </button>
+                    <button type="button" id="curr-btn-USD" onclick="setCurrency('USD')"
+                        class="py-2 rounded font-mono text-xs font-bold transition-all border border-transparent text-gray-400 hover:text-white">
+                        🌐 USD (Global)
+                    </button>
+                </div>
+            </div>
+
             <form id="cf-form" onsubmit="submitCheckout(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-mono text-gray-400 mb-1">Full Name</label>
@@ -781,23 +797,61 @@
 
     <script>
         // ──────────────────────────────────────────────
-        // CASHFREE INTEGRATION
-        // Switch mode to "production" after gateway activation
+        // CASHFREE INTEGRATION WITH IPG SUPPORT
         // ──────────────────────────────────────────────
         const CF_MODE = "sandbox"; // TODO: change to "production" after Cashfree activation
         const PORTAL_API = "http://localhost:9090"; // point to your portal backend
 
-        let _selectedPlan = null;
+        let _planKey = null;
+        let _planLabel = null;
+        let _selectedCurrency = "INR";
         const cashfree = Cashfree({ mode: CF_MODE });
 
-        function openCheckout(planKey, amountPaise, planLabel) {
-            _selectedPlan = { planKey, amountPaise, planLabel };
+        const PLAN_PRICES = {
+            personal: {
+                INR: { amount: 49900, label: "₹499.00/month" },
+                USD: { amount: 499,   label: "$4.99/month" }
+            },
+            pro: {
+                INR: { amount: 99900, label: "₹999.00/month" },
+                USD: { amount: 999,   label: "$9.99/user/month" }
+            }
+        };
+
+        function openCheckout(planKey, planLabel) {
+            _planKey = planKey;
+            _planLabel = planLabel;
+            _selectedCurrency = "INR"; // default to domestic INR on load
+            
             document.getElementById('cf-plan-title').textContent = planLabel + " Plan";
-            document.getElementById('cf-plan-price').textContent =
-                "₹" + (amountPaise / 100).toFixed(2) + "/month";
+            updatePriceUI();
+            
             document.getElementById('cf-error').classList.add('hidden');
             document.getElementById('cf-modal').classList.remove('hidden');
             document.getElementById('cf-modal').classList.add('flex');
+        }
+
+        function setCurrency(curr) {
+            _selectedCurrency = curr;
+            
+            // Update UI styles of toggle buttons
+            const inrBtn = document.getElementById('curr-btn-INR');
+            const usdBtn = document.getElementById('curr-btn-USD');
+            
+            if (curr === 'INR') {
+                inrBtn.className = "py-2 rounded font-mono text-xs font-bold transition-all border border-[#00E5FF] bg-[#00E5FF]/15 text-white";
+                usdBtn.className = "py-2 rounded font-mono text-xs font-bold transition-all border border-transparent text-gray-400 hover:text-white";
+            } else {
+                usdBtn.className = "py-2 rounded font-mono text-xs font-bold transition-all border border-[#00E5FF] bg-[#00E5FF]/15 text-white";
+                inrBtn.className = "py-2 rounded font-mono text-xs font-bold transition-all border border-transparent text-gray-400 hover:text-white";
+            }
+            
+            updatePriceUI();
+        }
+
+        function updatePriceUI() {
+            const pricing = PLAN_PRICES[_planKey][_selectedCurrency];
+            document.getElementById('cf-plan-price').textContent = pricing.label;
         }
 
         function closeCheckout() {
@@ -818,10 +872,12 @@
             btnText.textContent = 'Creating order...';
             errorBox.classList.add('hidden');
 
+            const pricing = PLAN_PRICES[_planKey][_selectedCurrency];
+
             const payload = {
-                plan: _selectedPlan.planKey,
-                amount: _selectedPlan.amountPaise,
-                currency: "INR",
+                plan: _planKey,
+                amount: pricing.amount,
+                currency: _selectedCurrency,
                 customer_name: document.getElementById('cf-name').value.trim(),
                 customer_email: document.getElementById('cf-email').value.trim(),
                 customer_phone: document.getElementById('cf-phone').value.trim(),
