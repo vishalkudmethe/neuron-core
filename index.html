@@ -33,6 +33,8 @@
     </script>
     <!-- Lucide Icons wrapper -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Cashfree Payments JS SDK v3 -->
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <style>
         body {
             background-color: #030712;
@@ -608,9 +610,9 @@
                             <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Personal AI Session Ledger
                         </li>
                     </ul>
-                    <a href="./portal/index.html" class="block text-center py-2 rounded bg-cyanAccent/10 border border-cyanAccent hover:bg-cyanAccent/20 text-xs font-mono text-cyanAccent font-bold transition-all">
+                    <button onclick="openCheckout('personal', 499, 'Personal Cloud')" class="block w-full text-center py-2 rounded bg-cyanAccent/10 border border-cyanAccent hover:bg-cyanAccent/20 text-xs font-mono text-cyanAccent font-bold transition-all">
                         Upgrade to Cloud
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -645,9 +647,9 @@
                             <i data-lucide="check" class="w-3.5 h-3.5 text-cyanAccent flex-shrink-0"></i> Team Impact Graphs
                         </li>
                     </ul>
-                    <a href="mailto:enterprise@ai-neuron.org?subject=Pro%20Team%20Licensing" class="block text-center py-2 rounded bg-cyanAccent text-xs font-mono text-black font-bold hover:bg-cyanMuted transition-colors">
+                    <button onclick="openCheckout('pro', 999, 'Pro Team')" class="block w-full text-center py-2 rounded bg-cyanAccent text-xs font-mono text-black font-bold hover:bg-cyanMuted transition-colors">
                         Start Free Trial
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -731,6 +733,133 @@
                 }, 2000);
             });
         }
+    </script>
+
+    <!-- ══════════════════════════════════════════
+         CASHFREE CHECKOUT MODAL
+         ══════════════════════════════════════════ -->
+    <div id="cf-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="bg-[#0A0F1D] border border-[#0891B2]/30 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 id="cf-plan-title" class="text-white font-mono font-bold text-lg">Upgrade Plan</h3>
+                    <p id="cf-plan-price" class="text-[#00E5FF] font-mono text-sm mt-0.5"></p>
+                </div>
+                <button onclick="closeCheckout()" class="text-gray-500 hover:text-white transition-colors text-xl font-mono">&times;</button>
+            </div>
+            <form id="cf-form" onsubmit="submitCheckout(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-1">Full Name</label>
+                    <input id="cf-name" type="text" required placeholder="Vishal Kudmethe"
+                        class="w-full bg-black/40 border border-[#0891B2]/30 rounded-lg px-4 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-[#00E5FF] transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-1">Email Address</label>
+                    <input id="cf-email" type="email" required placeholder="you@example.com"
+                        class="w-full bg-black/40 border border-[#0891B2]/30 rounded-lg px-4 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-[#00E5FF] transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-1">Phone (10 digits)</label>
+                    <input id="cf-phone" type="tel" required placeholder="9999999999" pattern="[0-9]{10}"
+                        class="w-full bg-black/40 border border-[#0891B2]/30 rounded-lg px-4 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-[#00E5FF] transition-colors">
+                </div>
+                <div id="cf-error" class="text-red-400 text-xs font-mono hidden"></div>
+                <button type="submit" id="cf-submit-btn"
+                    class="w-full py-3 rounded-lg bg-[#00E5FF] text-black font-mono font-bold text-sm hover:bg-[#0891B2] transition-colors flex items-center justify-center gap-2">
+                    <span id="cf-btn-text">Proceed to Payment</span>
+                    <svg id="cf-spinner" class="hidden w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                </button>
+            </form>
+            <p class="text-center text-[10px] text-gray-500 font-mono mt-4">
+                🔒 Secured by Cashfree Payments &bull; PCI DSS Compliant
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ──────────────────────────────────────────────
+        // CASHFREE INTEGRATION
+        // Switch mode to "production" after gateway activation
+        // ──────────────────────────────────────────────
+        const CF_MODE = "sandbox"; // TODO: change to "production" after Cashfree activation
+        const PORTAL_API = "http://localhost:9090"; // point to your portal backend
+
+        let _selectedPlan = null;
+        const cashfree = Cashfree({ mode: CF_MODE });
+
+        function openCheckout(planKey, amountPaise, planLabel) {
+            _selectedPlan = { planKey, amountPaise, planLabel };
+            document.getElementById('cf-plan-title').textContent = planLabel + " Plan";
+            document.getElementById('cf-plan-price').textContent =
+                "₹" + (amountPaise / 100).toFixed(2) + "/month";
+            document.getElementById('cf-error').classList.add('hidden');
+            document.getElementById('cf-modal').classList.remove('hidden');
+            document.getElementById('cf-modal').classList.add('flex');
+        }
+
+        function closeCheckout() {
+            document.getElementById('cf-modal').classList.add('hidden');
+            document.getElementById('cf-modal').classList.remove('flex');
+        }
+
+        async function submitCheckout(e) {
+            e.preventDefault();
+            const btn = document.getElementById('cf-submit-btn');
+            const spinner = document.getElementById('cf-spinner');
+            const btnText = document.getElementById('cf-btn-text');
+            const errorBox = document.getElementById('cf-error');
+
+            // Show loading state
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            btnText.textContent = 'Creating order...';
+            errorBox.classList.add('hidden');
+
+            const payload = {
+                plan: _selectedPlan.planKey,
+                amount: _selectedPlan.amountPaise,
+                currency: "INR",
+                customer_name: document.getElementById('cf-name').value.trim(),
+                customer_email: document.getElementById('cf-email').value.trim(),
+                customer_phone: document.getElementById('cf-phone').value.trim(),
+            };
+
+            try {
+                const resp = await fetch(PORTAL_API + "/api/v1/payments/create-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+
+                if (!data.ok || !data.data.payment_session_id) {
+                    throw new Error(data.error || "Failed to create payment order.");
+                }
+
+                // Open Cashfree modal checkout
+                closeCheckout();
+                cashfree.checkout({
+                    paymentSessionId: data.data.payment_session_id,
+                    redirectTarget: "_modal",
+                });
+
+            } catch (err) {
+                errorBox.textContent = "⚠ " + err.message;
+                errorBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+                btnText.textContent = 'Proceed to Payment';
+            }
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('cf-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeCheckout();
+        });
     </script>
 </body>
 </html>

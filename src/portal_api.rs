@@ -744,6 +744,8 @@ pub async fn start_portal_server(port: u16) -> Result<()> {
         .route("/api/v1/admin/license",                      get(admin_license))
         .route("/api/v1/admin/audit",                        get(admin_audit))
         .route("/api/v1/admin/seats/provision",              post(provision_seat))
+        // Payments
+        .route("/api/v1/payments/create-order",              post(create_payment_order))
         .fallback_service(tower_http::services::ServeDir::new("portal"))
         .with_state(state)
         .layer(cors);
@@ -756,10 +758,128 @@ pub async fn start_portal_server(port: u16) -> Result<()> {
     println!("  {} Listening on  http://localhost:{}", "→".green(), port);
     println!("  {} Dev API       http://localhost:{}/api/v1/dev/projects", "→".cyan(), port);
     println!("  {} Admin API     http://localhost:{}/api/v1/admin/stats", "→".cyan(), port);
-    println!("  {} Health        http://localhost:{}/api/v1/health", "→".cyan(), port);
+        println!("  {} Payment API   http://localhost:{}/api/v1/payments/create-order", "→".cyan(), port);
     println!("");
 
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+// ─── Cashfree Payment Integration ────────────────────────────────────────────
+
+#[derive(Deserialize)]
+pub struct CreateOrderRequest {
+    pub plan: String,
+    pub amount: u64,         // amount in paise (e.g. 499 = ₹4.99)
+    pub currency: String,
+    pub customer_name: String,
+    pub customer_email: String,
+    pub customer_phone: String,
+}
+
+#[derive(Serialize)]
+pub struct CreateOrderResponse {
+    pub order_id: String,
+    pub payment_session_id: String,
+    pub amount: u64,
+    pub plan: String,
+}
+
+/// POST /api/v1/payments/create-order
+/// Creates a Cashfree payment order and returns the payment_session_id
+/// for the frontend JS SDK to open checkout.
+async fn create_payment_order(
+    Json(payload): Json<CreateOrderRequest>,
+) -> impl IntoResponse {
+    // ── Cashfree credentials ──────────────────────────────────────────────
+    // Set these as environment variables or replace with your actual keys.
+    // CASHFREE_APP_ID   → your Cashfree App ID from merchant dashboard
+    // CASHFREE_SECRET   → your Cashfree Secret Key
+    // CASHFREE_ENV      → "sandbox" or "production"
+    let app_id = std::env::var("CASHFREE_APP_ID")
+        .unwrap_or_else(|_| "TEST_APP_ID".to_string());
+    let secret = std::env::var("CASHFREE_SECRET")
+        .unwrap_or_else(|_| "TEST_SECRET".to_string());
+    let cf_env = std::env::var("CASHFREE_ENV")
+        .unwrap_or_else(|_| "sandbox".to_string());
+
+    let api_base = if cf_env == "production" {
+        "https://api.cashfree.com/pg"
+    } else {
+        "https://sandbox.cashfree.com/pg"
+    };
+
+    let order_id = format!("AINRN-{}-{}",
+        &payload.plan.to_uppercase(),
+        uuid::Uuid::new_v4().to_string().split('-').next().unwrap_or("order")
+    );
+
+    // Amount must be in INR units (not paise) for Cashfree
+    let amount_inr = payload.amount as f64 / 100.0;
+
+    let order_body = serde_json::json!({
+        "order_id": order_id,
+        "order_amount": amount_inr,
+        "order_currency": payload.currency,
+        "customer_details": {
+            "customer_id": format!("cust-{}", uuid::Uuid::new_v4()),
+            "customer_name": payload.customer_name,
+            "customer_email": payload.customer_email,
+            "customer_phone": payload.customer_phone,
+        },
+        "order_meta": {
+            "return_url": "https://ai-neuron.org/?payment=success&order_id={order_id}",
+            "notify_url": "https://ai-neuron.org/api/v1/payments/webhook"
+        },
+        "order_note": format!("AI-NEURON {} plan subscription", payload.plan),
+    });
+
+    let client = reqwest::Client::new();
+    let cf_resp = client
+        .post(format!("{}/orders", api_base))
+        .header("x-api-version", "2023-08-01")
+        .header("x-client-id", &app_id)
+        .header("x-client-secret", &secret)
+        .header("Content-Type", "application/json")
+        .json(&order_body)
+        .send()
+        .await;
+
+    match cf_resp {
+        Ok(r) => {
+            let status = r.status();
+            let body: serde_json::Value = r.json().await.unwrap_or_default();
+            if status.is_success() {
+                let session_id = body["payment_session_id"]
+                    .as_str()
+                    .unwrap_or("")
+                    .to_string();
+                Json(ApiResponse {
+                    ok: true,
+                    data: CreateOrderResponse {
+                        order_id: order_id.clone(),
+                        payment_session_id: session_id,
+                        amount: payload.amount,
+                        plan: payload.plan,
+                    },
+                }).into_response()
+            } else {
+                (
+                    StatusCode::BAD_GATEWAY,
+                    Json(serde_json::json!({
+                        "ok": false,
+                        "error": format!("Cashfree error: {}", body)
+                    }))
+                ).into_response()
+            }
+        }
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({
+                "ok": false,
+                "error": format!("Network error calling Cashfree: {}", e)
+            }))
+        ).into_response(),
+    }
 }
 
