@@ -1,0 +1,49 @@
+# Rust build artifacts
+/target/
+
+# Neuron local data (runtime files — never public)
+.neuron/index.sqlite
+.neuron/index.sqlite-shm
+.neuron/index.sqlite-wal
+.neuron/watcher.lock
+.neuron/backups/
+.neuron/session_context.md
+.neuron/neuron_manifest.json
+.neuron/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Firebase / Hosting (website deploy config — private)
+.firebase/
+firebase.json
+.firebaserc
+CNAME
+
+# Website HTML pages (hosted separately via Firebase — not part of OSS Rust project)
+index.html
+guide.html
+pricing.html
+enterprise.html
+investors.html
+privacy.html
+terms.html
+portal/
+
+# Internal .agent/ business strategy documents (private)
+.agent/
+
+# Internal planning/business documents
+Roadmap\ to\ $100M+.JPG
+Multi\ Project\ Multi\ Agent\ Discussion.docx
+*.docx
+*.JPG
+*.jpg
+*.jpeg
+*.png
+!ai_neuron_logo.png
+
+# Binary downloads (large files)
+downloads/
